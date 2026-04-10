@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Session 01 — Cours complet</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0910;
+  --bg2: #111020;
+  --surface: #16152a;
+  --surface2: #1d1c35;
+  --border: #252440;
+  --gold: #d4a843;
+  --red: #e84545;
+  --teal: #3ecfca;
+  --green: #4ecf7a;
+  --text: #e8e6f5;
+  --text-dim: #9896b8;
+  --text-muted: #4a4868;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; overflow:hidden; }
+#app { height:100dvh; display:flex; flex-direction:column; }
+
+/* HEADER */
+.header {
+padding: calc(var(–safe-top) + 12px) 16px 12px;
+background:var(–bg);
+border-bottom:1px solid var(–border);
+display:flex; align-items:center; gap:12px;
+flex-shrink:0; z-index:20;
+}
+.back-btn {
+width:36px; height:36px; border-radius:10px;
+background:var(–surface); border:1px solid var(–border);
+color:var(–text-dim); font-size:18px;
+display:flex; align-items:center; justify-content:center;
+cursor:pointer; flex-shrink:0; text-decoration:none;
+}
+.header-info { flex:1; min-width:0; }
+.header-title { font-size:15px; font-weight:600; color:var(–text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.header-sub { font-size:11px; color:var(–text-muted); font-family:‘DM Mono’,monospace; letter-spacing:1px; }
+.timer-pill {
+background:var(–surface); border:1px solid var(–border);
+border-radius:20px; padding:6px 12px;
+font-family:‘DM Mono’,monospace; font-size:13px; color:var(–gold);
+cursor:pointer; flex-shrink:0; transition:all 0.2s;
+}
+.timer-pill.running { border-color:rgba(212,168,67,0.4); background:rgba(212,168,67,0.08); }
+
+/* CHAPTER NAV */
+.chapter-nav {
+display:flex; overflow-x:auto; gap:0;
+border-bottom:1px solid var(–border);
+flex-shrink:0; scrollbar-width:none;
+}
+.chapter-nav::-webkit-scrollbar { display:none; }
+.chapter-btn {
+flex-shrink:0; padding:10px 16px;
+background:none; border:none; border-bottom:2px solid transparent;
+color:var(–text-muted); font-family:‘DM Mono’,monospace;
+font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+cursor:pointer; white-space:nowrap; transition:all 0.2s;
+}
+.chapter-btn.active { color:var(–gold); border-bottom-color:var(–gold); }
+
+/* PROGRESS BAR */
+.progress-bar { height:2px; background:var(–border); flex-shrink:0; }
+.progress-fill { height:100%; background:var(–gold); transition:width 0.5s ease; }
+
+/* SCROLL */
+.scroll-area { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+
+/* CHAPTERS */
+.chapter { display:none; padding:20px 16px 40px; }
+.chapter.active { display:block; }
+
+/* COMMON */
+.section-tag {
+font-size:10px; font-family:‘DM Mono’,monospace;
+letter-spacing:3px; text-transform:uppercase; color:var(–gold);
+margin-bottom:6px;
+}
+.chapter-hero {
+background:linear-gradient(135deg,var(–surface) 0%,var(–bg2) 100%);
+border:1px solid var(–border); border-radius:14px;
+padding:20px; margin-bottom:20px; position:relative; overflow:hidden;
+}
+.chapter-hero::after {
+content:attr(data-icon);
+position:absolute; right:14px; bottom:-8px;
+font-size:72px; opacity:0.06; line-height:1;
+}
+.chapter-title {
+font-family:‘Playfair Display’,serif; font-size:26px;
+font-weight:900; color:#fff; margin-bottom:6px; line-height:1.2;
+}
+.chapter-desc { font-size:14px; color:var(–text-dim); font-style:italic; line-height:1.6; }
+.chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.chip {
+font-size:11px; font-family:‘DM Mono’,monospace;
+padding:4px 10px; border-radius:20px;
+border:1px solid var(–border); color:var(–text-muted);
+}
+
+/* CONTENT BLOCKS */
+.block {
+background:var(–surface); border:1px solid var(–border);
+border-radius:12px; margin-bottom:10px; overflow:hidden;
+}
+.block-header {
+padding:14px 16px; display:flex; align-items:center;
+gap:12px; cursor:pointer; user-select:none;
+}
+.block-icon {
+width:34px; height:34px; border-radius:9px;
+display:flex; align-items:center; justify-content:center;
+font-size:17px; flex-shrink:0;
+}
+.bi-red { background:rgba(232,69,69,0.12); }
+.bi-gold { background:rgba(212,168,67,0.12); }
+.bi-teal { background:rgba(62,207,202,0.12); }
+.bi-green { background:rgba(78,207,122,0.12); }
+.bi-muted { background:var(–surface2); }
+.block-title { font-size:15px; font-weight:500; color:var(–text); flex:1; }
+.block-arrow { color:var(–text-muted); font-size:14px; transition:transform 0.25s; flex-shrink:0; }
+.block.open .block-arrow { transform:rotate(90deg); }
+.block-body {
+display:none; padding:0 16px 16px;
+border-top:1px solid var(–border);
+}
+.block.open .block-body { display:block; }
+.block-body p { font-size:14px; color:var(–text-dim); line-height:1.75; margin-top:12px; }
+.block-body strong { color:var(–text); }
+.block-body em { color:var(–gold); font-style:normal; }
+
+.info-box {
+border-radius:10px; padding:14px; margin-top:14px;
+}
+.info-box.teal { background:rgba(62,207,202,0.06); border:1px solid rgba(62,207,202,0.2); }
+.info-box.gold { background:rgba(212,168,67,0.06); border:1px solid rgba(212,168,67,0.2); }
+.info-box.red { background:rgba(232,69,69,0.06); border:1px solid rgba(232,69,69,0.2); }
+.info-box.green { background:rgba(78,207,122,0.06); border:1px solid rgba(78,207,122,0.2); }
+.info-label {
+font-size:10px; font-family:‘DM Mono’,monospace;
+letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.info-box.teal .info-label { color:var(–teal); }
+.info-box.gold .info-label { color:var(–gold); }
+.info-box.red .info-label { color:var(–red); }
+.info-box.green .info-label { color:var(–green); }
+.info-box p { margin-top:0 !important; font-style:italic; }
+.info-box.gold p { color:#d4b96a; }
+.info-box.teal p { color:#a0ede9; }
+.info-box.red p { color:#f0a0a0; }
+.info-box.green p { color:#a0e8bc; }
+
+ul.content-list { list-style:none; padding:0; margin-top:10px; }
+ul.content-list li {
+font-size:14px; color:var(–text-dim);
+padding:8px 0; border-bottom:1px solid var(–border);
+line-height:1.5; display:flex; gap:8px;
+}
+ul.content-list li:last-child { border-bottom:none; }
+ul.content-list li::before { content:‘→’; color:var(–gold); flex-shrink:0; }
+
+/* ===== CHAPTER 1 — POSITIONS ===== */
+.table-visual {
+position:relative; width:240px; height:140px;
+margin:20px auto;
+background:radial-gradient(ellipse at center,#1a3a1a 0%,#0d2010 100%);
+border:3px solid #2a5a2a; border-radius:70px;
+box-shadow:0 0 30px rgba(0,80,0,0.3), inset 0 0 20px rgba(0,0,0,0.5);
+}
+.table-label {
+position:absolute; left:50%; top:50%;
+transform:translate(-50%,-50%);
+font-family:‘DM Mono’,monospace; font-size:10px;
+color:rgba(255,255,255,0.15); letter-spacing:2px; text-align:center;
+}
+.seat {
+position:absolute; transform:translate(-50%,-50%);
+display:flex; flex-direction:column; align-items:center; gap:3px;
+cursor:pointer; transition:all 0.2s;
+}
+.seat-circle {
+width:32px; height:32px; border-radius:50%;
+background:var(–surface2); border:2px solid var(–border);
+display:flex; align-items:center; justify-content:center;
+font-family:‘DM Mono’,monospace; font-size:9px; color:var(–text-muted);
+font-weight:500; transition:all 0.2s; letter-spacing:0;
+}
+.seat-name {
+font-family:‘DM Mono’,monospace; font-size:8px;
+color:var(–text-muted); letter-spacing:1px; text-transform:uppercase;
+transition:all 0.2s;
+}
+.seat.active .seat-circle {
+background:var(–gold); border-color:var(–gold-light);
+color:#0a0910; font-weight:700;
+box-shadow:0 0 12px rgba(212,168,67,0.5);
+}
+.seat.active .seat-name { color:var(–gold); }
+.seat.dealer .seat-circle { border-color:var(–teal); }
+
+.pos-info {
+background:var(–surface); border:1px solid var(–border);
+border-radius:12px; padding:16px; margin-top:8px;
+min-height:100px; transition:all 0.3s;
+}
+.pos-info-name {
+font-family:‘Playfair Display’,serif; font-size:20px;
+font-weight:700; color:var(–gold); margin-bottom:4px;
+}
+.pos-info-full { font-size:12px; color:var(–text-muted); font-family:‘DM Mono’,monospace; letter-spacing:1px; margin-bottom:10px; }
+.pos-info-desc { font-size:14px; color:var(–text-dim); line-height:1.65; }
+.pos-strength {
+display:flex; gap:4px; margin-top:10px;
+}
+.pos-dot {
+height:4px; flex:1; border-radius:2px; background:var(–border);
+transition:background 0.3s;
+}
+.pos-dot.filled { background:var(–gold); }
+
+/* ===== CHAPTER 2 — HANDS ===== */
+.hand-tier {
+background:var(–surface); border-radius:12px;
+border:1px solid var(–border); margin-bottom:10px; overflow:hidden;
+}
+.hand-tier-header {
+padding:14px 16px; display:flex; align-items:center;
+gap:12px; cursor:pointer;
+}
+.tier-badge {
+width:34px; height:34px; border-radius:9px;
+display:flex; align-items:center; justify-content:center;
+font-size:16px; flex-shrink:0;
+}
+.tier-1 { background:rgba(232,69,69,0.15); }
+.tier-2 { background:rgba(212,168,67,0.15); }
+.tier-3 { background:rgba(62,207,202,0.15); }
+.tier-4 { background:rgba(120,120,160,0.15); }
+.tier-title { font-size:15px; font-weight:600; color:var(–text); flex:1; }
+.tier-sub { font-size:11px; color:var(–text-muted); font-family:‘DM Mono’,monospace; }
+.hand-tier-body { display:none; padding:0 16px 16px; border-top:1px solid var(–border); }
+.hand-tier.open .hand-tier-body { display:block; }
+.hand-tier.open .block-arrow { transform:rotate(90deg); }
+
+.hand-pills { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.hand-pill {
+font-family:‘DM Mono’,monospace; font-size:13px;
+padding:6px 12px; border-radius:8px;
+cursor:pointer; transition:all 0.2s; border:1px solid;
+}
+.hp-red { background:rgba(232,69,69,0.1); border-color:rgba(232,69,69,0.3); color:#f08080; }
+.hp-gold { background:rgba(212,168,67,0.1); border-color:rgba(212,168,67,0.3); color:var(–gold); }
+.hp-teal { background:rgba(62,207,202,0.1); border-color:rgba(62,207,202,0.3); color:var(–teal); }
+.hp-muted { background:var(–surface2); border-color:var(–border); color:var(–text-muted); }
+.hand-pill:active { transform:scale(0.95); }
+
+.hand-detail {
+background:var(–bg2); border:1px solid var(–border);
+border-radius:10px; padding:14px; margin-top:12px;
+display:none;
+}
+.hand-detail.show { display:block; }
+.hd-name { font-family:‘Playfair Display’,serif; font-size:18px; color:#fff; margin-bottom:4px; }
+.hd-equity { font-family:‘DM Mono’,monospace; font-size:12px; color:var(–teal); margin-bottom:8px; }
+.hd-desc { font-size:13px; color:var(–text-dim); line-height:1.65; }
+
+/* SUITED vs OFFSUIT */
+.suited-compare {
+display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;
+}
+.suited-card {
+background:var(–bg2); border:1px solid var(–border);
+border-radius:10px; padding:14px; text-align:center;
+}
+.suited-card.s { border-color:rgba(62,207,202,0.3); }
+.suited-card.o { border-color:rgba(120,120,160,0.3); }
+.suited-label { font-family:‘DM Mono’,monospace; font-size:10px; letter-spacing:2px; margin-bottom:8px; }
+.suited-card.s .suited-label { color:var(–teal); }
+.suited-card.o .suited-label { color:var(–text-muted); }
+.suited-hand { font-size:22px; margin-bottom:6px; }
+.suited-equity { font-family:‘DM Mono’,monospace; font-size:16px; font-weight:500; }
+.suited-card.s .suited-equity { color:var(–teal); }
+.suited-card.o .suited-equity { color:var(–text-muted); }
+.suited-sub { font-size:11px; color:var(–text-muted); margin-top:4px; }
+
+/* ===== CHAPTER 3 — PREFLOP CHARTS ===== */
+.pos-selector {
+display:flex; gap:8px; overflow-x:auto;
+margin-bottom:16px; padding-bottom:4px; scrollbar-width:none;
+}
+.pos-selector::-webkit-scrollbar { display:none; }
+.pos-sel-btn {
+flex-shrink:0; padding:8px 14px; border-radius:10px;
+border:1px solid var(–border); background:none;
+color:var(–text-muted); font-family:‘DM Mono’,monospace;
+font-size:12px; cursor:pointer; transition:all 0.2s;
+letter-spacing:1px;
+}
+.pos-sel-btn.active { background:var(–gold); color:var(–bg); border-color:var(–gold); }
+
+.chart-title {
+font-family:‘Playfair Display’,serif; font-size:20px;
+font-weight:700; color:#fff; margin-bottom:4px;
+}
+.chart-subtitle { font-size:13px; color:var(–text-dim); margin-bottom:16px; font-style:italic; }
+
+/* RANGE GRID */
+.range-grid {
+display:grid; grid-template-columns:repeat(13,1fr);
+gap:2px; margin-bottom:16px;
+}
+.range-cell {
+aspect-ratio:1; border-radius:3px;
+display:flex; align-items:center; justify-content:center;
+font-family:‘DM Mono’,monospace; font-size:7px;
+font-weight:500; cursor:pointer; transition:all 0.15s;
+border:1px solid transparent; line-height:1;
+text-align:center; padding:1px;
+}
+.range-cell:active { transform:scale(0.9); }
+.rc-raise { background:#2a1a0a; border-color:#d4a843; color:#d4a843; }
+.rc-call { background:#0a1f2a; border-color:#3ecfca; color:#3ecfca; }
+.rc-fold { background:#141223; border-color:#252440; color:#3a3860; }
+.rc-3bet { background:#1f0a0a; border-color:#e84545; color:#e84545; }
+
+.range-legend {
+display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px;
+}
+.legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(–text-dim); font-family:‘DM Mono’,monospace; }
+.legend-dot { width:12px; height:12px; border-radius:3px; border:1px solid; flex-shrink:0; }
+.ld-raise { background:#2a1a0a; border-color:#d4a843; }
+.ld-call { background:#0a1f2a; border-color:#3ecfca; }
+.ld-3bet { background:#1f0a0a; border-color:#e84545; }
+.ld-fold { background:#141223; border-color:#252440; }
+
+.chart-hand-detail {
+background:var(–surface); border:1px solid var(–border);
+border-radius:10px; padding:14px; min-height:60px;
+display:none;
+}
+.chart-hand-detail.show { display:block; }
+.chd-hand { font-family:‘DM Mono’,monospace; font-size:18px; color:var(–gold); margin-bottom:4px; }
+.chd-action { font-size:13px; color:var(–text-dim); line-height:1.6; }
+
+.chart-rules {
+background:var(–surface); border:1px solid var(–border);
+border-radius:12px; padding:16px; margin-bottom:14px;
+}
+.chart-rules-title { font-size:12px; font-family:‘DM Mono’,monospace; letter-spacing:2px; color:var(–gold); margin-bottom:12px; text-transform:uppercase; }
+.rule-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid var(–border); align-items:flex-start; }
+.rule-item:last-child { border:none; padding-bottom:0; }
+.rule-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+.rule-text { font-size:13px; color:var(–text-dim); line-height:1.5; }
+.rule-text strong { color:var(–text); }
+
+/* ===== CHAPTER 4 — REVISION ===== */
+.revision-timer {
+background:linear-gradient(135deg,var(–surface),var(–bg2));
+border:1px solid var(–border); border-radius:14px;
+padding:20px; text-align:center; margin-bottom:20px;
+}
+.rt-display {
+font-family:‘Playfair Display’,serif; font-size:52px;
+font-weight:900; color:var(–gold); line-height:1;
+margin:8px 0;
+}
+.rt-label { font-family:‘DM Mono’,monospace; font-size:10px; letter-spacing:3px; color:var(–text-muted); text-transform:uppercase; }
+.rt-progress { height:3px; background:var(–border); border-radius:2px; margin:14px 0; }
+.rt-fill { height:100%; background:var(–gold); border-radius:2px; transition:width 1s linear; }
+.rt-btns { display:flex; gap:10px; justify-content:center; margin-top:14px; }
+.rt-start { background:var(–gold); border:none; border-radius:10px; color:var(–bg); font-family:‘DM Mono’,monospace; font-size:13px; font-weight:500; padding:12px 28px; cursor:pointer; letter-spacing:1px; }
+.rt-reset { background:var(–surface); border:1px solid var(–border); border-radius:10px; color:var(–text-muted); font-family:‘DM Mono’,monospace; font-size:13px; padding:12px 20px; cursor:pointer; }
+
+/* FLASHCARD MINI */
+.mini-fc {
+background:var(–surface); border:1px solid var(–border);
+border-radius:12px; padding:20px; margin-bottom:10px;
+text-align:center; cursor:pointer; transition:all 0.3s;
+min-height:110px; display:flex; flex-direction:column;
+align-items:center; justify-content:center;
+}
+.mini-fc.revealed { background:#0d1f0d; border-color:rgba(78,207,122,0.3); }
+.mini-fc-q { font-size:15px; color:var(–text); font-style:italic; line-height:1.5; }
+.mini-fc-a { display:none; font-size:14px; color:#7dde7d; line-height:1.6; }
+.mini-fc.revealed .mini-fc-q { display:none; }
+.mini-fc.revealed .mini-fc-a { display:block; }
+.mini-fc-hint { font-size:10px; color:var(–text-muted); font-family:‘DM Mono’,monospace; letter-spacing:1px; margin-top:10px; }
+
+/* CHECKLIST */
+.check-item {
+display:flex; align-items:flex-start; gap:12px;
+background:var(–surface); border:1px solid var(–border);
+border-radius:10px; padding:14px 16px; margin-bottom:8px;
+cursor:pointer; transition:all 0.2s;
+}
+.check-item.done { border-color:rgba(78,207,122,0.3); background:rgba(78,207,122,0.04); }
+.check-box2 {
+width:22px; height:22px; border-radius:6px;
+border:2px solid var(–border); flex-shrink:0;
+display:flex; align-items:center; justify-content:center;
+font-size:14px; transition:all 0.2s; margin-top:1px;
+}
+.check-item.done .check-box2 { background:rgba(78,207,122,0.2); border-color:var(–green); color:var(–green); }
+.check-text { font-size:14px; color:var(–text-dim); line-height:1.5; flex:1; }
+.check-item.done .check-text { color:var(–text-muted); text-decoration:line-through; }
+
+/* QUIZ MINI */
+.quiz-item {
+background:var(–surface); border:1px solid var(–border);
+border-radius:12px; padding:16px; margin-bottom:10px;
+}
+.quiz-num { font-size:10px; font-family:‘DM Mono’,monospace; color:var(–text-muted); letter-spacing:2px; margin-bottom:8px; text-transform:uppercase; }
+.quiz-q { font-size:15px; color:var(–text); font-style:italic; margin-bottom:12px; line-height:1.5; }
+.quiz-reveal { width:100%; background:transparent; border:1px solid var(–border); border-radius:8px; color:var(–text-muted); font-family:‘DM Mono’,monospace; font-size:11px; letter-spacing:1px; text-transform:uppercase; padding:10px; cursor:pointer; }
+.quiz-ans { display:none; background:#0d1f0d; border:1px solid rgba(78,207,122,0.2); border-radius:8px; padding:12px; margin-top:10px; font-size:13px; color:#7dde7d; line-height:1.6; }
+.quiz-rate { display:none; gap:8px; margin-top:10px; }
+.quiz-rate.show { display:flex; }
+.quiz-correct { flex:1; background:rgba(62,207,202,0.1); border:1px solid rgba(62,207,202,0.3); color:var(–teal); border-radius:8px; padding:9px; font-family:‘DM Mono’,monospace; font-size:11px; cursor:pointer; letter-spacing:1px; }
+.quiz-wrong { flex:1; background:rgba(232,69,69,0.1); border:1px solid rgba(232,69,69,0.3); color:var(–red); border-radius:8px; padding:9px; font-family:‘DM Mono’,monospace; font-size:11px; cursor:pointer; letter-spacing:1px; }
+.quiz-item.correct { border-color:rgba(62,207,202,0.3); }
+.quiz-item.wrong { border-color:rgba(232,69,69,0.3); }
+
+/* SCORE BLOCK */
+.score-block {
+background:var(–surface); border:1px solid var(–border);
+border-radius:14px; padding:20px; text-align:center; margin-bottom:20px;
+}
+.score-val { font-family:‘Playfair Display’,serif; font-size:44px; font-weight:900; color:var(–gold); }
+.score-lbl { font-family:‘DM Mono’,monospace; font-size:11px; color:var(–text-muted); letter-spacing:2px; margin-top:4px; text-transform:uppercase; }
+.score-bar { height:4px; background:var(–border); border-radius:2px; margin:14px 0; }
+.score-fill { height:100%; background:var(–gold); border-radius:2px; transition:width 0.5s; }
+
+/* NAV BOTTOM */
+.bottom-nav {
+padding-bottom:calc(var(–safe-bottom) + 4px);
+background:rgba(10,9,16,0.97); border-top:1px solid var(–border);
+display:flex; flex-shrink:0; backdrop-filter:blur(20px);
+}
+.next-chapter-btn {
+flex:1; padding:12px; background:var(–gold); border:none;
+color:var(–bg); font-family:‘DM Mono’,monospace;
+font-size:13px; font-weight:500; letter-spacing:1px; cursor:pointer;
+transition:all 0.2s;
+}
+.next-chapter-btn:active { transform:scale(0.99); }
+.prev-chapter-btn {
+width:56px; padding:12px; background:var(–surface);
+border:none; border-right:1px solid var(–border);
+color:var(–text-dim); font-size:18px; cursor:pointer;
+}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+
+<div class="header">
+  <a class="back-btn" href="index.html">‹</a>
+  <div class="header-info">
+    <div class="header-title">Session 01 — Cours complet</div>
+    <div class="header-sub" id="chapterLabel">CHAPITRE 1/4 · POSITIONS</div>
+  </div>
+  <div class="timer-pill" id="globalTimer" onclick="toggleGlobalTimer()">25:00</div>
+</div>
+
+<!-- CHAPTER NAV -->
+
+<div class="chapter-nav">
+  <button class="chapter-btn active" onclick="goChapter(0,this)">① Positions</button>
+  <button class="chapter-btn" onclick="goChapter(1,this)">② Mains</button>
+  <button class="chapter-btn" onclick="goChapter(2,this)">③ Charts</button>
+  <button class="chapter-btn" onclick="goChapter(3,this)">④ Révision</button>
+</div>
+
+<!-- PROGRESS -->
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:12%"></div></div>
+
+<!-- SCROLL -->
+
+<div class="scroll-area">
+
+<!-- ═══════════════════════════════════════════
+     CHAPITRE 1 — POSITIONS (20 min)
+═══════════════════════════════════════════ -->
+
+<div class="chapter active" id="ch-0">
+  <div class="chapter-hero" data-icon="🗺️">
+    <div class="section-tag">① Positions · 20 min</div>
+    <div class="chapter-title">Les 9 positions à la table</div>
+    <div class="chapter-desc">Comprendre où tu t'assieds change tout. La position, c'est le pouvoir d'agir en dernier.</div>
+    <div class="chips">
+      <span class="chip">⏱ 20 min</span>
+      <span class="chip">🗺️ 9 positions</span>
+      <span class="chip">📍 Early / Mid / Late</span>
+    </div>
+  </div>
+
+  <!-- TABLE INTERACTIVE -->
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">🃏</div>
+      <div class="block-title">Table interactive — Touche une position</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <div class="table-visual" id="pokerTable">
+        <div class="table-label">TEXAS<br>HOLD'EM</div>
+        <!-- Seats positioned around oval table -->
+        <div class="seat" style="left:50%;top:90%" onclick="selectPos('BB')" id="seat-BB">
+          <div class="seat-circle">BB</div>
+          <div class="seat-name">Big Blind</div>
+        </div>
+        <div class="seat" style="left:22%;top:82%" onclick="selectPos('SB')" id="seat-SB">
+          <div class="seat-circle">SB</div>
+          <div class="seat-name">Small B.</div>
+        </div>
+        <div class="seat dealer" style="left:5%;top:60%" onclick="selectPos('BTN')" id="seat-BTN">
+          <div class="seat-circle">BTN</div>
+          <div class="seat-name">Button</div>
+        </div>
+        <div class="seat" style="left:8%;top:30%" onclick="selectPos('CO')" id="seat-CO">
+          <div class="seat-circle">CO</div>
+          <div class="seat-name">Cutoff</div>
+        </div>
+        <div class="seat" style="left:28%;top:10%" onclick="selectPos('HJ')" id="seat-HJ">
+          <div class="seat-circle">HJ</div>
+          <div class="seat-name">HiJack</div>
+        </div>
+        <div class="seat" style="left:55%;top:5%" onclick="selectPos('UTG2')" id="seat-UTG2">
+          <div class="seat-circle">+2</div>
+          <div class="seat-name">UTG+2</div>
+        </div>
+        <div class="seat" style="left:78%;top:12%" onclick="selectPos('UTG1')" id="seat-UTG1">
+          <div class="seat-circle">+1</div>
+          <div class="seat-name">UTG+1</div>
+        </div>
+        <div class="seat" style="left:93%;top:38%" onclick="selectPos('UTG')" id="seat-UTG">
+          <div class="seat-circle">UTG</div>
+          <div class="seat-name">Under Gun</div>
+        </div>
+      </div>
+
+```
+  <div class="pos-info" id="posInfo">
+    <div style="color:var(--text-muted);font-size:14px;font-style:italic;text-align:center;padding:10px 0;">
+      Touche une position sur la table pour en savoir plus ↑
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- EXPLICATIONS -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">📍</div>
+      <div class="block-title">Early Position — UTG, UTG+1, UTG+2</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p><strong>Under The Gun (UTG)</strong> agit en premier pré-flop. C'est la position la plus désavantageuse. Tu ne sais pas encore ce que vont faire les 8 autres joueurs.</p>
+      <ul class="content-list">
+        <li>Jouer seulement les mains <strong>très fortes</strong> : AA, KK, QQ, JJ, AKs, AKo</li>
+        <li>Chaque joueur après toi peut relancer — tu dois anticiper ça</li>
+        <li>Ta range est la plus <strong>serrée</strong> de la table (~9% des mains)</li>
+        <li>Post-flop : tu agiras en premier → désavantage informationnel</li>
+      </ul>
+      <div class="info-box red">
+        <div class="info-label">⚠️ Erreur fréquente</div>
+        <p>Jouer KJo, QTo depuis UTG. Ces mains semblent jouables mais face aux relances suivantes, elles perdent de l'argent sur le long terme.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">📍</div>
+      <div class="block-title">Middle Position — HJ, CO</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Le <strong>HiJack (HJ)</strong> et le <strong>Cutoff (CO)</strong> offrent plus de flexibilité. Moins de joueurs derrière, donc tu peux ouvrir un peu plus large.</p>
+      <ul class="content-list">
+        <li>Tu peux ajouter : TT, 99, AQs, AJs, KQs, QJs à ta range d'ouverture</li>
+        <li>CO : encore plus de mains jouables car seulement BTN, SB, BB derrière</li>
+        <li>Si ça fold jusqu'à toi en CO → tu peux voler les blinds plus souvent</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">💡 Conseil</div>
+        <p>Le CO est souvent appelé la "deuxième meilleure position". Profites-en pour être agressif quand le pot est non relancé.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🏆</div>
+      <div class="block-title">Late Position — BTN, SB, BB</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Le <strong>Button (BTN)</strong> est la position la plus puissante du poker. Tu agis en <strong>dernier sur tous les tours post-flop</strong>. Tu vois l'action de tout le monde avant toi.</p>
+      <ul class="content-list">
+        <li>BTN : ouvrir ~40–45% des mains face à des positions vides</li>
+        <li>Tu peux jouer des mains spéculatives profitablement depuis BTN</li>
+        <li>SB et BB : bien qu'ils paient les blinds, ils agissent <em>en premier post-flop</em></li>
+        <li>BB : doit défendre plus large car il a déjà investi 1 BB</li>
+      </ul>
+      <div class="info-box teal">
+        <div class="info-label">🏆 Règle d'or</div>
+        <p>"Position = pouvoir. Plus tu agis tard, plus tu as d'informations, plus tu as d'avantage."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-muted">📊</div>
+      <div class="block-title">Résumé — Force des positions</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li><strong>BTN</strong> — Meilleure position. Maximum de mains jouables.</li>
+        <li><strong>CO</strong> — Excellent. 2e meilleure position.</li>
+        <li><strong>HJ</strong> — Bien. Range modérément large.</li>
+        <li><strong>UTG+2 / UTG+1</strong> — Moyen. Resserrer la range.</li>
+        <li><strong>UTG</strong> — Difficile. Seulement les mains premium.</li>
+        <li><strong>SB</strong> — Pire position post-flop. Être sélectif.</li>
+        <li><strong>BB</strong> — Défendre largement mais jouer prudemment.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CHAPITRE 2 — MAINS (25 min)
+═══════════════════════════════════════════ -->
+
+<div class="chapter" id="ch-1">
+  <div class="chapter-hero" data-icon="♠">
+    <div class="section-tag">② Hiérarchie des mains · 25 min</div>
+    <div class="chapter-title">Classer et comprendre chaque main</div>
+    <div class="chapter-desc">4 catégories, 3 concepts clés, et la logique derrière chaque décision pré-flop.</div>
+    <div class="chips">
+      <span class="chip">⏱ 25 min</span>
+      <span class="chip">🃏 4 catégories</span>
+      <span class="chip">♠ Suited vs Offsuit</span>
+    </div>
+  </div>
+
+  <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Touche une main pour plus de détails</div>
+
+  <!-- TIER 1 -->
+
+  <div class="hand-tier open">
+    <div class="hand-tier-header" onclick="toggleTier(this)">
+      <div class="tier-badge tier-1">🔴</div>
+      <div>
+        <div class="tier-title">Mains Premium</div>
+        <div class="tier-sub">ALWAYS RAISE · TOUTE POSITION</div>
+      </div>
+      <div class="block-arrow" style="color:var(--text-muted);font-size:14px;">›</div>
+    </div>
+    <div class="hand-tier-body">
+      <div class="hand-pills">
+        <div class="hand-pill hp-red" onclick="showHandDetail('AA')">AA</div>
+        <div class="hand-pill hp-red" onclick="showHandDetail('KK')">KK</div>
+        <div class="hand-pill hp-red" onclick="showHandDetail('QQ')">QQ</div>
+        <div class="hand-pill hp-red" onclick="showHandDetail('JJ')">JJ</div>
+        <div class="hand-pill hp-red" onclick="showHandDetail('AKs')">AKs</div>
+      </div>
+      <div class="hand-detail" id="hd-detail">
+        <div class="hd-name" id="hd-name">—</div>
+        <div class="hd-equity" id="hd-equity"></div>
+        <div class="hd-desc" id="hd-desc"></div>
+      </div>
+      <div class="info-box gold" style="margin-top:12px;">
+        <div class="info-label">Action</div>
+        <p>Toujours raise ou 3-bet. Jamais limper (appeler les blinds sans relancer). L'objectif est de construire un gros pot avec la meilleure main.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIER 2 -->
+
+  <div class="hand-tier">
+    <div class="hand-tier-header" onclick="toggleTier(this)">
+      <div class="tier-badge tier-2">🟡</div>
+      <div>
+        <div class="tier-title">Mains Fortes</div>
+        <div class="tier-sub">RAISE / 3-BET SELON POSITION</div>
+      </div>
+      <div class="block-arrow" style="color:var(--text-muted);font-size:14px;">›</div>
+    </div>
+    <div class="hand-tier-body">
+      <div class="hand-pills">
+        <div class="hand-pill hp-gold" onclick="showHandDetail('TT')">TT</div>
+        <div class="hand-pill hp-gold" onclick="showHandDetail('99')">99</div>
+        <div class="hand-pill hp-gold" onclick="showHandDetail('AQs')">AQs</div>
+        <div class="hand-pill hp-gold" onclick="showHandDetail('AJs')">AJs</div>
+        <div class="hand-pill hp-gold" onclick="showHandDetail('AKo')">AKo</div>
+        <div class="hand-pill hp-gold" onclick="showHandDetail('KQs')">KQs</div>
+      </div>
+      <div class="info-box gold" style="margin-top:12px;">
+        <div class="info-label">Contexte</div>
+        <p>Excellentes mains, mais sensibles au contexte. Face à un 3-bet d'un joueur très tight depuis UTG, même TT peut devenir un call/fold.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIER 3 -->
+
+  <div class="hand-tier">
+    <div class="hand-tier-header" onclick="toggleTier(this)">
+      <div class="tier-badge tier-3">🟢</div>
+      <div>
+        <div class="tier-title">Mains Spéculatives</div>
+        <div class="tier-sub">CALL / RAISE EN POSITION</div>
+      </div>
+      <div class="block-arrow" style="color:var(--text-muted);font-size:14px;">›</div>
+    </div>
+    <div class="hand-tier-body">
+      <div class="hand-pills">
+        <div class="hand-pill hp-teal" onclick="showHandDetail('88')">88</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('77')">77</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('66')">66</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('55')">55</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('44')">44</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('33')">33</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('22')">22</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('A9s')">A9s</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('JTs')">JTs</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('T9s')">T9s</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('98s')">98s</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('87s')">87s</div>
+        <div class="hand-pill hp-teal" onclick="showHandDetail('76s')">76s</div>
+      </div>
+      <div class="info-box teal" style="margin-top:12px;">
+        <div class="info-label">Set Mining</div>
+        <p>Les petites paires cherchent un brelan (set) au flop. Probabilité : ~12% par flop. Besoin de stacks 15x le raise minimum pour être profitable.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIER 4 -->
+
+  <div class="hand-tier">
+    <div class="hand-tier-header" onclick="toggleTier(this)">
+      <div class="tier-badge tier-4">⚪</div>
+      <div>
+        <div class="tier-title">Mains Marginales</div>
+        <div class="tier-sub">FOLD LA PLUPART DU TEMPS</div>
+      </div>
+      <div class="block-arrow" style="color:var(--text-muted);font-size:14px;">›</div>
+    </div>
+    <div class="hand-tier-body">
+      <div class="hand-pills">
+        <div class="hand-pill hp-muted" onclick="showHandDetail('KJo')">KJo</div>
+        <div class="hand-pill hp-muted" onclick="showHandDetail('QTo')">QTo</div>
+        <div class="hand-pill hp-muted" onclick="showHandDetail('J9o')">J9o</div>
+        <div class="hand-pill hp-muted" onclick="showHandDetail('KTo')">KTo</div>
+        <div class="hand-pill hp-muted" onclick="showHandDetail('A7o')">A7o</div>
+      </div>
+      <div class="info-box red" style="margin-top:12px;">
+        <div class="info-label">⚠️ Trap hands</div>
+        <p>Ces mains paraissent fortes mais sont souvent "dominées" — leur kicker est battu par une main similaire mais meilleure. Le fold est gratuit.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUITED vs OFFSUIT -->
+
+  <div class="block" style="margin-top:14px;">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">♥</div>
+      <div class="block-title">Suited vs Offsuit — Le "s" qui compte</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Avoir deux cartes de <strong>même couleur</strong> ajoute environ <em>+2 à 4% d'equity</em> grâce au potentiel de flush (couleur).</p>
+      <div class="suited-compare">
+        <div class="suited-card s">
+          <div class="suited-label">SUITED ♠</div>
+          <div class="suited-hand">A♠K♠</div>
+          <div class="suited-equity">12.7%</div>
+          <div class="suited-sub">vs AA</div>
+        </div>
+        <div class="suited-card o">
+          <div class="suited-label">OFFSUIT</div>
+          <div class="suited-hand">A♠K♥</div>
+          <div class="suited-equity">9.5%</div>
+          <div class="suited-sub">vs AA</div>
+        </div>
+        <div class="suited-card s">
+          <div class="suited-label">SUITED ♥</div>
+          <div class="suited-hand">7♥6♥</div>
+          <div class="suited-equity">22.1%</div>
+          <div class="suited-sub">vs AA</div>
+        </div>
+        <div class="suited-card o">
+          <div class="suited-label">OFFSUIT</div>
+          <div class="suited-hand">7♥6♠</div>
+          <div class="suited-equity">18.0%</div>
+          <div class="suited-sub">vs AA</div>
+        </div>
+      </div>
+      <div class="info-box teal" style="margin-top:14px;">
+        <div class="info-label">Pourquoi c'est important</div>
+        <p>Les suited connectors (76s, 87s, 98s…) peuvent faire des couleurs "déguisées" — l'adversaire ne voit pas venir ta main. C'est leur vraie force.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CHAPITRE 3 — CHARTS PRÉ-FLOP (30 min)
+═══════════════════════════════════════════ -->
+
+<div class="chapter" id="ch-2">
+  <div class="chapter-hero" data-icon="📊">
+    <div class="section-tag">③ Charts pré-flop · 30 min</div>
+    <div class="chapter-title">Quoi jouer, depuis où</div>
+    <div class="chapter-desc">Les ranges d'ouverture par position. Sélectionne une position pour voir le tableau adapté.</div>
+    <div class="chips">
+      <span class="chip">⏱ 30 min</span>
+      <span class="chip">📊 9 positions</span>
+      <span class="chip">🎯 Open / 3-bet / Fold</span>
+    </div>
+  </div>
+
+  <!-- POSITION SELECTOR -->
+
+  <div class="pos-selector">
+    <button class="pos-sel-btn active" onclick="selectChart('UTG',this)">UTG</button>
+    <button class="pos-sel-btn" onclick="selectChart('UTG1',this)">UTG+1</button>
+    <button class="pos-sel-btn" onclick="selectChart('HJ',this)">HJ</button>
+    <button class="pos-sel-btn" onclick="selectChart('CO',this)">CO</button>
+    <button class="pos-sel-btn" onclick="selectChart('BTN',this)">BTN</button>
+    <button class="pos-sel-btn" onclick="selectChart('SB',this)">SB</button>
+    <button class="pos-sel-btn" onclick="selectChart('BB',this)">BB</button>
+  </div>
+
+  <div class="chart-title" id="chartTitle">UTG — Under The Gun</div>
+  <div class="chart-subtitle" id="chartSubtitle">Range la plus serrée · ~9% des mains · 8 joueurs derrière</div>
+
+  <!-- LEGEND -->
+
+  <div class="range-legend">
+    <div class="legend-item"><div class="legend-dot ld-raise"></div>Open Raise</div>
+    <div class="legend-item"><div class="legend-dot ld-3bet"></div>3-Bet</div>
+    <div class="legend-item"><div class="legend-dot ld-call"></div>Call</div>
+    <div class="legend-item"><div class="legend-dot ld-fold"></div>Fold</div>
+  </div>
+
+  <!-- RANGE GRID -->
+
+  <div class="range-grid" id="rangeGrid"></div>
+
+  <!-- HAND DETAIL ON CLICK -->
+
+  <div class="chart-hand-detail" id="chartHandDetail">
+    <div class="chd-hand" id="chdHand"></div>
+    <div class="chd-action" id="chdAction"></div>
+  </div>
+
+  <!-- RULES -->
+
+  <div class="chart-rules" style="margin-top:16px;">
+    <div class="chart-rules-title" id="chartRulesTitle">Règles pour UTG</div>
+    <div id="chartRules"></div>
+  </div>
+
+  <!-- CONCEPTS -->
+
+  <div class="block" style="margin-top:14px;">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">💡</div>
+      <div class="block-title">Concepts clés des charts</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li><strong>Open raise :</strong> Tu es le premier à relancer. En général 2.5x les blinds en position, 3x hors position.</li>
+        <li><strong>3-bet :</strong> Quelqu'un a ouvert avant toi — tu re-relances. Ça représente une main très forte ou un bluff ciblé.</li>
+        <li><strong>Steal :</strong> Depuis SB/BTN/CO, si tout le monde a foldé, on peut "voler" les blinds avec une range plus large.</li>
+        <li><strong>Range advantage :</strong> Depuis UTG tu as un avantage de range car tu montres plus de force. Depuis BB tu dois défendre plus large.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">⚠️</div>
+      <div class="block-title">Erreurs pré-flop les plus communes</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li>Jouer trop de mains depuis UTG (VPIP > 20% en EP = problème)</li>
+        <li>Limper (appeler BB sans relancer) avec des mains comme AJo, KQo — ça donne de mauvaises cotes aux adversaires</li>
+        <li>Ne pas 3-bet assez souvent avec les mains premium — on laisse les adversaires réaliser leur equity trop facilement</li>
+        <li>Défendre le BB avec n'importe quelle main face à un gros raise</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CHAPITRE 4 — RÉVISION ACTIVE (15 min)
+═══════════════════════════════════════════ -->
+
+<div class="chapter" id="ch-3">
+  <div class="chapter-hero" data-icon="🎯">
+    <div class="section-tag">④ Révision active · 15 min</div>
+    <div class="chapter-title">Test final & mémorisation</div>
+    <div class="chapter-desc">Utilise le timer, complète la checklist, et teste-toi avec les 5 questions.</div>
+    <div class="chips">
+      <span class="chip">⏱ 15 min</span>
+      <span class="chip">✅ Checklist</span>
+      <span class="chip">🎯 5 questions</span>
+    </div>
+  </div>
+
+  <!-- TIMER 15 min -->
+
+  <div class="revision-timer">
+    <div class="rt-label">TIMER DE RÉVISION</div>
+    <div class="rt-display" id="rtDisplay">15:00</div>
+    <div class="rt-progress">
+      <div class="rt-fill" id="rtFill" style="width:0%"></div>
+    </div>
+    <div class="rt-btns">
+      <button class="rt-start" id="rtBtn" onclick="toggleRevisionTimer()">▶ Démarrer</button>
+      <button class="rt-reset" onclick="resetRevisionTimer()">↺ Reset</button>
+    </div>
+  </div>
+
+  <!-- SCORE -->
+
+  <div class="score-block">
+    <div class="score-val" id="quizScore">0/5</div>
+    <div class="score-lbl">Score Quiz</div>
+    <div class="score-bar"><div class="score-fill" id="scoreFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- CHECKLIST -->
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Checklist — Coche ce que tu maîtrises</div>
+
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je connais les 9 positions dans l'ordre : UTG → UTG+1 → UTG+2 → HJ → CO → BTN → SB → BB</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je sais pourquoi BTN est la meilleure position (dernier à agir post-flop)</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je connais les 5 mains premium : AA, KK, QQ, JJ, AKs</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je comprends la différence entre suited (s) et offsuit (o) et pourquoi ça compte</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je sais ce qu'est le set mining et pourquoi les petites paires sont spéculatives (~12%)</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je comprends pourquoi KJo est une "trap hand" et quand la folder</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">VPIP cible en cash game : 15–20%</div>
+  </div>
+
+  <!-- QUIZ -->
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin:20px 0 10px;">Quiz final — Évalue-toi</div>
+
+  <div class="quiz-item" id="qi-0">
+    <div class="quiz-num">Question 01</div>
+    <div class="quiz-q">Tu as JJ en UTG. Un joueur en CO 3-bet après ton open raise. Que fais-tu et pourquoi ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(0,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-0">JJ est une main premium mais vulnérable face à un 3-bet de CO. La range de 3-bet de CO contient souvent AA, KK, QQ, AK — toutes dominent JJ. La meilleure action est généralement un <strong>call</strong> pour voir le flop sans over-committement, ou un <strong>4-bet/fold</strong> si tu lis que l'adversaire est très tight. Fold est une erreur — JJ est trop fort.</div>
+    <div class="quiz-rate" id="qr-0">
+      <button class="quiz-correct" onclick="rateQuiz(0,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(0,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-1">
+    <div class="quiz-num">Question 02</div>
+    <div class="quiz-q">Quelle est la différence entre AKs et AKo en termes d'equity face à AA ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(1,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-1">AKs a <strong>12.7% d'equity</strong> face à AA, contre <strong>9.5%</strong> pour AKo. La différence (+3.2%) vient du potentiel de flush (couleur). AKs peut compléter une couleur même contre AA, ce qui lui donne des outs supplémentaires. Cette différence est cumulative sur le long terme.</div>
+    <div class="quiz-rate" id="qr-1">
+      <button class="quiz-correct" onclick="rateQuiz(1,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(1,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-2">
+    <div class="quiz-num">Question 03</div>
+    <div class="quiz-q">Tu as 7♥6♥ en BTN. UTG open raise 2.5BB. Que fais-tu ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(2,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-2">76s est une main spéculative parfaite depuis BTN. Tu es en <strong>meilleure position</strong> (tu agiras en dernier post-flop), et tu as la cote implicite pour call. Si les stacks sont profonds (50BB+), le call est standard. Tu cherches à faire une quinte ou une couleur — des mains bien déguisées qui peuvent extraire beaucoup quand elles touchent.</div>
+    <div class="quiz-rate" id="qr-2">
+      <button class="quiz-correct" onclick="rateQuiz(2,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(2,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-3">
+    <div class="quiz-num">Question 04</div>
+    <div class="quiz-q">Pourquoi ne doit-on PAS limper (appeler les blinds) avec AA depuis UTG ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(3,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-3">Limper avec AA est une <strong>erreur majeure</strong> pour deux raisons : (1) Tu laisses les adversaires entrer dans le pot avec n'importe quelle main à bas prix, leur donnant les cotes pour battre AA avec des mains spéculatives. (2) Tu ne construis pas de pot avec la meilleure main. Avec AA, l'objectif est de relancer pour isoler 1-2 adversaires et jouer un gros pot en favori.</div>
+    <div class="quiz-rate" id="qr-3">
+      <button class="quiz-correct" onclick="rateQuiz(3,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(3,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-4">
+    <div class="quiz-num">Question 05</div>
+    <div class="quiz-q">Tu as 22 en CO. BTN open raise 3BB. Que fais-tu et pourquoi ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(4,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-4">22 est une main de <strong>set mining</strong>. Tu call si : (1) Les stacks sont suffisamment profonds (15x le pot minimum pour rentabiliser), (2) Tu seras en position post-flop (ce qui est le cas depuis CO face à BTN). La probabilité de toucher un set est ~12% par flop. Si tu touches → tu extrais énormément. Si tu rates → tu peux facilement folder au flop sans perdre plus.</div>
+    <div class="quiz-rate" id="qr-4">
+      <button class="quiz-correct" onclick="rateQuiz(4,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(4,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <!-- RÈGLE D'OR FINALE -->
+
+  <div class="info-box gold" style="margin-top:20px;">
+    <div class="info-label">🏆 Règle d'or — Session 01</div>
+    <p>"Jouer moins de mains, mieux les jouer. La position décide de ta liberté. Les mains premium construisent des pots — les mains spéculatives surprennent."</p>
+  </div>
+
+</div>
+
+</div><!-- end scroll-area -->
+
+<!-- BOTTOM NAV -->
+
+<div class="bottom-nav">
+  <button class="prev-chapter-btn" id="prevBtn" onclick="prevChapter()" style="display:none">‹</button>
+  <button class="next-chapter-btn" id="nextBtn" onclick="nextChapter()">② Hiérarchie des mains →</button>
+</div>
+
+</div><!-- end app -->
+
+<script>
+// ═════════════ CHAPTER NAV ═════════════
+let currentChapter = 0;
+const chapterTitles = [
+  ['CHAPITRE 1/4 · POSITIONS', '① Positions → ② Hiérarchie des mains'],
+  ['CHAPITRE 2/4 · MAINS', '② Hiérarchie des mains → ③ Charts pré-flop'],
+  ['CHAPITRE 3/4 · CHARTS PRÉ-FLOP', '③ Charts pré-flop → ④ Révision'],
+  ['CHAPITRE 4/4 · RÉVISION', 'Session complète — Bien joué !'],
+];
+const progress = [12, 37, 62, 100];
+
+function goChapter(n, btn) {
+  document.querySelectorAll('.chapter').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.chapter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('ch-' + n).classList.add('active');
+  if (btn) btn.classList.add('active');
+  else document.querySelectorAll('.chapter-btn')[n].classList.add('active');
+  document.querySelector('.scroll-area').scrollTop = 0;
+  currentChapter = n;
+  document.getElementById('chapterLabel').textContent = chapterTitles[n][0];
+  document.getElementById('progressFill').style.width = progress[n] + '%';
+  document.getElementById('prevBtn').style.display = n === 0 ? 'none' : 'flex';
+  document.getElementById('prevBtn').style.alignItems = 'center';
+  document.getElementById('prevBtn').style.justifyContent = 'center';
+  document.getElementById('nextBtn').textContent = n < 3 ? chapterTitles[n][1] + ' →' : '✓ Session terminée !';
+  // Set timer label for chapter
+  const times = ['20:00','25:00','30:00','15:00'];
+  if (!globalRunning) {
+    globalSecs = parseInt(times[n]) * 60;
+    const m = Math.floor(globalSecs/60).toString().padStart(2,'0');
+    document.getElementById('globalTimer').textContent = m + ':00';
+  }
+}
+
+function nextChapter() {
+  if (currentChapter < 3) goChapter(currentChapter + 1, null);
+  else {
+    const done = JSON.parse(localStorage.getItem('completedSessions') || '[]');
+    if (!done.includes(1)) { done.push(1); localStorage.setItem('completedSessions', JSON.stringify(done)); }
+    window.location.href = 'index.html';
+  }
+}
+function prevChapter() {
+  if (currentChapter > 0) goChapter(currentChapter - 1, null);
+}
+
+// ═════════════ BLOCKS ═════════════
+function toggleBlock(header) {
+  const block = header.closest('.block');
+  block.classList.toggle('open');
+}
+function toggleTier(header) {
+  const tier = header.closest('.hand-tier');
+  tier.classList.toggle('open');
+}
+
+// ═════════════ GLOBAL TIMER ═════════════
+const chapterSeconds = [20*60, 25*60, 30*60, 15*60];
+let globalSecs = 20*60;
+let globalRunning = false;
+let globalInterval = null;
+
+function toggleGlobalTimer() {
+  if (globalRunning) {
+    clearInterval(globalInterval);
+    globalRunning = false;
+    document.getElementById('globalTimer').classList.remove('running');
+  } else {
+    globalRunning = true;
+    document.getElementById('globalTimer').classList.add('running');
+    globalInterval = setInterval(() => {
+      if (globalSecs <= 0) { clearInterval(globalInterval); globalRunning = false; return; }
+      globalSecs--;
+      const m = Math.floor(globalSecs/60).toString().padStart(2,'0');
+      const s = (globalSecs%60).toString().padStart(2,'0');
+      document.getElementById('globalTimer').textContent = m + ':' + s;
+    }, 1000);
+  }
+}
+
+// ═════════════ POSITIONS ═════════════
+const posData = {
+  UTG: {
+    name: 'UTG', full: 'Under The Gun',
+    desc: 'La pire position. Tu agis en premier sur tous les tours pré-flop. 8 joueurs derrière toi peuvent relancer. Joue seulement tes meilleures mains.',
+    strength: 1,
+    range: 'AA, KK, QQ, JJ, TT, AKs, AKo, AQs'
+  },
+  UTG1: {
+    name: 'UTG+1', full: 'Under The Gun +1',
+    desc: '7 joueurs derrière. Légèrement mieux qu\'UTG mais toujours très serré. Ajoute quelques mains comme AJs, KQs à ta range.',
+    strength: 2,
+    range: 'AA–TT, AKs, AKo, AQs, AJs, KQs'
+  },
+  UTG2: {
+    name: 'UTG+2', full: 'Under The Gun +2',
+    desc: '6 joueurs derrière. Tu commences à avoir un peu plus de liberté. Ajoute 99, 88, ATs.',
+    strength: 3,
+    range: 'AA–88, AKs, AKo, AQs, AJs, ATs, KQs, QJs'
+  },
+  HJ: {
+    name: 'HJ', full: 'HiJack',
+    desc: '4 joueurs derrière. Position intermédiaire. Tu peux ouvrir environ 15–18% des mains. Suited connectors commencent à être profitables.',
+    strength: 4,
+    range: 'AA–77, AXs, KQs–KTs, QJs, JTs, T9s, AKo–ATo, KQo'
+  },
+  CO: {
+    name: 'CO', full: 'CutOff',
+    desc: '2e meilleure position. 3 joueurs derrière (BTN, SB, BB). Tu peux ouvrir ~22–25% des mains. Vol de blindes très efficace depuis ici.',
+    strength: 6,
+    range: 'AA–55, AXs, KXs, QJs–Q9s, JTs–87s, AKo–A9o, KQo–KJo, QJo'
+  },
+  BTN: {
+    name: 'BTN', full: 'Button — Dealer',
+    desc: 'La meilleure position au poker. Tu agis en DERNIER sur tous les tours post-flop. Tu peux ouvrir ~40–45% des mains quand ça fold jusqu\'à toi.',
+    strength: 9,
+    range: 'Toutes les paires, AXs, KXs, QXs, J9s+, suited connectors, AXo–A2o, KXo, QJo–Q9o, JTo'
+  },
+  SB: {
+    name: 'SB', full: 'Small Blind',
+    desc: 'Position trompeuse. Tu agis en dernier pré-flop mais en PREMIER post-flop (pire position). Joue serré et agressif. N\'appelle que les bonnes mains.',
+    strength: 3,
+    range: 'AA–77, AXs, KQs–KJs, QJs, JTs, AKo–AJo, KQo'
+  },
+  BB: {
+    name: 'BB', full: 'Big Blind',
+    desc: 'Tu as déjà investi 1BB donc tu as de meilleures cotes pour défendre. Mais tu agiras en premier post-flop. Défends large mais joue prudemment.',
+    strength: 4,
+    range: 'Défense large : toute main avec cote directe favorable vs le raise'
+  },
+};
+
+function selectPos(pos) {
+  document.querySelectorAll('.seat').forEach(s => s.classList.remove('active'));
+  document.getElementById('seat-' + pos).classList.add('active');
+  const d = posData[pos];
+  const dots = Array(9).fill(0).map((_,i) => `<div class="pos-dot ${i < d.strength ? 'filled' : ''}"></div>`).join('');
+  document.getElementById('posInfo').innerHTML = `
+    <div class="pos-info-name">${d.name}</div>
+    <div class="pos-info-full">${d.full.toUpperCase()}</div>
+    <div class="pos-info-desc">${d.desc}</div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:6px;">FORCE DE POSITION</div>
+    <div class="pos-strength">${dots}</div>
+    <div style="margin-top:10px;font-size:12px;color:var(--text-dim);"><span style="color:var(--gold);font-family:'DM Mono',monospace;font-size:11px;">RANGE : </span>${d.range}</div>
+  `;
+}
+
+// ═════════════ HAND DETAILS ═════════════
+const handDetails = {
+  AA: { equity: '85% vs main random', desc: 'Les rockets. La meilleure main pré-flop. Toujours relancer/4-bet. Attention post-flop si le board est très connecté (789 flush).' },
+  KK: { equity: '82% vs main random', desc: 'Presque aussi fort que AA. La seule main qui te bat est AA. Relance agressivement. Sois prudent si un As tombe au flop et l\'adversaire continue.' },
+  QQ: { equity: '79% vs main random', desc: 'Main premium mais vulnérable aux boards avec A ou K. Relance pré-flop toujours. Post-flop : sois prudent face à une forte résistance sur A-high ou K-high board.' },
+  JJ: { equity: '77% vs main random', desc: 'Forte main mais souvent mise à l\'épreuve. Tu perds contre AA, KK, QQ. Contre un 3-bet d\'un joueur tight, c\'est souvent un call plutôt qu\'un 4-bet.' },
+  AKs: { equity: '67% vs main random · 12.7% vs AA', desc: 'La meilleure main à deux cartes différentes. Combine la valeur (grosses paires) ET le tirage (couleur royale). 3-bet/4-bet toujours sans hésiter.' },
+  TT: { equity: '75% vs main random', desc: 'Frontière entre premium et fort. Très bonne main mais face à un 3-bet depuis un joueur tight en UTG, peut devenir un call/fold.' },
+  '99': { equity: '72% vs main random', desc: 'Bonne main mais souvent utilisée pour call plutôt que 3-bet. Post-flop : si une overcarte (T, J, Q, K, A) tombe, procède avec prudence.' },
+  AQs: { equity: '66% vs main random', desc: 'Forte main qui domine AJo, ATo, KQo. Mais attention : elle est dominée par AK. Face à un raise UTG, souvent mieux de call que de 3-bet.' },
+  AJs: { equity: '65% vs main random', desc: 'Bonne main en position. Post-flop : tu as souvent le meilleur kicker. Hors position face à un raise, être plus prudent.' },
+  AKo: { equity: '65% vs main random', desc: 'Presque aussi fort que AKs mais sans le potentiel flush. Même action : 3-bet/4-bet. La différence de ~3% ne change pas la stratégie pré-flop.' },
+  KQs: { equity: '63% vs main random', desc: 'Très bonne main en position et multi-way. Peut faire des grosses mains (straight, flush, top pair top kicker). Hors position face à un raise UTG : call ou fold.' },
+  '88': { equity: '69% vs main random', desc: 'Frontière des mains fortes/spéculatives. Cherche un set (12%). Si tu ne touches pas set et y\'a beaucoup d\'action, c\'est souvent muck.' },
+  '77': { equity: '67% vs main random', desc: 'Set mining pur. Call les raises avec bonnes cotes implicites. Post-flop sans set et board avec overcards → fold facilement.' },
+  '66': { equity: '65% vs main random', desc: 'Petite paire spéculative. Besoin d\'un set. Joue principalement en multi-way pots avec bonne position.' },
+  '55': { equity: '63% vs main random', desc: 'Set mining depuis les bonnes positions. Stacks profonds nécessaires (au moins 15x le raise).' },
+  '44': { equity: '61% vs main random', desc: 'Très petite paire. Set mining uniquement. Si stacks < 15x le raise → fold souvent.' },
+  '33': { equity: '59% vs main random', desc: 'Quasi uniquement du set mining depuis BTN/CO avec stacks profonds.' },
+  '22': { equity: '58% vs main random', desc: 'La plus petite paire. Set mining si les conditions sont bonnes. Set à 10.8% de probabilité. Un set de 22 est la main la plus déguisée.' },
+  A9s: { equity: '64% vs main random', desc: 'Suited Ace. Peut faire nut flush (la meilleure couleur). Joue bien multi-way. Bon en position.' },
+  JTs: { equity: '57% vs main random', desc: 'Le parfait suited connector. Peut faire straight, flush, ou les deux. Très bien déguisé. Post-flop : beaucoup de outs quand tu touches un draw.' },
+  T9s: { equity: '55% vs main random', desc: 'Suited connector classique. 8 outs pour une quinte ouverte, potentiel flush. Besoin de bons implied odds.' },
+  '98s': { equity: '53% vs main random', desc: 'Bon suited connector en position. Fort en multi-way. Cherche des draws costauds au flop.' },
+  '87s': { equity: '51% vs main random', desc: 'Un des meilleurs suited connectors spéculatifs. Bien déguisé, nombreux draws possibles.' },
+  '76s': { equity: '49% vs main random', desc: 'Suited connector bas. Besoin de pots multi-way avec cotes implicites élevées. Ne pas jouer hors position.' },
+  KJo: { equity: '60% vs main random', desc: 'Trap hand. Semble forte mais dominée par AJ, KQ, KK, AA. Hors position face à un raise = fold la plupart du temps.' },
+  QTo: { equity: '56% vs main random', desc: 'Trap hand. Souvent dominée. Joue seulement depuis BTN/CO vs des positions plus faibles. Hors position = fold.' },
+  J9o: { equity: '52% vs main random', desc: 'Main borderline. Peut être jouée depuis BTN pour voler les blinds. Hors position ou face à un raise = fold.' },
+  KTo: { equity: '58% vs main random', desc: 'Encore une trap hand. KTo hors position face à un raise UTG est un fold. Trop souvent dominé par KJ+, AK, AA, KK.' },
+  A7o: { equity: '59% vs main random', desc: 'Ace avec faible kicker. Peut toucher une paire d\'As mais avec un mauvais kicker. Joue occasionnellement depuis BTN pour steal, sinon fold.' },
+};
+
+function showHandDetail(hand) {
+  const d = handDetails[hand];
+  if (!d) return;
+  document.getElementById('hd-detail').classList.add('show');
+  document.getElementById('hd-name').textContent = hand;
+  document.getElementById('hd-equity').textContent = d.equity;
+  document.getElementById('hd-desc').textContent = d.desc;
+}
+
+// ═════════════ RANGE CHARTS ═════════════
+const ranks = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+
+// Actions: 'r'=raise, 'c'=call, 'f'=fold, '3'=3bet
+const chartData = {
+  UTG: {
+    title: 'UTG — Under The Gun',
+    subtitle: 'Range la plus serrée · ~9% des mains · 8 joueurs derrière',
+    rules: [
+      { icon: '✅', text: '<strong>Open raise</strong> : AA, KK, QQ, JJ, TT, AKs, AKo, AQs, AJs, KQs' },
+      { icon: '❌', text: '<strong>Fold tout le reste</strong>. Même AQo, KJs, TT- peuvent être trop risqués dans certains contextes.' },
+      { icon: '💡', text: '<strong>VPIP cible depuis UTG</strong> : 9–12%. Sois l\'image du joueur solide et sélectif.' },
+    ],
+    matrix: {
+      'AA':'3','KK':'3','QQ':'3','JJ':'r','TT':'r','99':'f','88':'f','77':'f','66':'f','55':'f','44':'f','33':'f','22':'f',
+      'AKs':'3','AQs':'r','AJs':'r','ATs':'f','A9s':'f','A8s':'f','A7s':'f','A6s':'f','A5s':'f','A4s':'f','A3s':'f','A2s':'f',
+      'AKo':'r','AQo':'f','AJo':'f','ATo':'f','A9o':'f','A8o':'f','A7o':'f','A6o':'f','A5o':'f','A4o':'f','A3o':'f','A2o':'f',
+      'KQs':'r','KJs':'f','KTs':'f','K9s':'f','K8s':'f','K7s':'f','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f',
+      'KQo':'f','KJo':'f','KTo':'f','K9o':'f','K8o':'f','K7o':'f','K6o':'f','K5o':'f','K4o':'f','K3o':'f','K2o':'f',
+      'QJs':'f','QTs':'f','Q9s':'f','Q8s':'f','Q7s':'f','Q6s':'f','Q5s':'f','Q4s':'f','Q3s':'f','Q2s':'f',
+      'QJo':'f','QTo':'f','Q9o':'f','Q8o':'f','Q7o':'f','Q6o':'f','Q5o':'f','Q4o':'f','Q3o':'f','Q2o':'f',
+      'JTs':'f','J9s':'f','J8s':'f','J7s':'f','J6s':'f','J5s':'f','J4s':'f','J3s':'f','J2s':'f',
+      'JTo':'f','J9o':'f','J8o':'f','J7o':'f','J6o':'f','J5o':'f','J4o':'f','J3o':'f','J2o':'f',
+      'T9s':'f','T8s':'f','T7s':'f','T6s':'f','T5s':'f','T4s':'f','T3s':'f','T2s':'f',
+      'T9o':'f','T8o':'f','T7o':'f','T6o':'f','T5o':'f','T4o':'f','T3o':'f','T2o':'f',
+      '98s':'f','97s':'f','96s':'f','95s':'f','94s':'f','93s':'f','92s':'f',
+      '98o':'f','97o':'f','96o':'f','95o':'f','94o':'f','93o':'f','92o':'f',
+    }
+  },
+  UTG1: {
+    title: 'UTG+1',
+    subtitle: 'Légèrement plus large · ~11% des mains · 7 joueurs derrière',
+    rules: [
+      { icon: '✅', text: '<strong>Open raise</strong> : AA–TT, AKs, AKo, AQs, AJs, ATs, KQs, QJs' },
+      { icon: '➕', text: '<strong>Ajouts vs UTG</strong> : ATs, QJs, 99 avec position' },
+      { icon: '💡', text: 'Toujours penser à qui est derrière. CO et BTN peuvent squeez.' },
+    ],
+    matrix: {
+      'AA':'3','KK':'3','QQ':'3','JJ':'r','TT':'r','99':'r','88':'f','77':'f','66':'f','55':'f','44':'f','33':'f','22':'f',
+      'AKs':'3','AQs':'r','AJs':'r','ATs':'r','A9s':'f','A8s':'f','A7s':'f','A6s':'f','A5s':'f','A4s':'f','A3s':'f','A2s':'f',
+      'AKo':'r','AQo':'f','AJo':'f','ATo':'f','A9o':'f','A8o':'f','A7o':'f','A6o':'f','A5o':'f','A4o':'f','A3o':'f','A2o':'f',
+      'KQs':'r','KJs':'f','KTs':'f','K9s':'f','K8s':'f','K7s':'f','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f',
+      'KQo':'f','KJo':'f','KTo':'f','K9o':'f','K8o':'f','K7o':'f','K6o':'f','K5o':'f','K4o':'f','K3o':'f','K2o':'f',
+      'QJs':'r','QTs':'f','Q9s':'f','Q8s':'f','Q7s':'f','Q6s':'f','Q5s':'f','Q4s':'f','Q3s':'f','Q2s':'f',
+      'QJo':'f','QTo':'f','Q9o':'f','Q8o':'f','Q7o':'f','Q6o':'f','Q5o':'f','Q4o':'f','Q3o':'f','Q2o':'f',
+    }
+  },
+  HJ: {
+    title: 'HiJack (HJ)',
+    subtitle: 'Position intermédiaire · ~15% des mains · 4 joueurs derrière',
+    rules: [
+      { icon: '✅', text: '<strong>Open raise</strong> : AA–77, AXs, KQs–KTs, QJs–Q9s, JTs, T9s, AKo–AJo, KQo' },
+      { icon: '➕', text: 'Les suited connectors commencent à être jouables (JTs, T9s)' },
+      { icon: '💡', text: 'Si CO ou BTN sont très agressifs (squeez souvent), resserre légèrement ta range.' },
+    ],
+    matrix: {
+      'AA':'3','KK':'3','QQ':'3','JJ':'r','TT':'r','99':'r','88':'r','77':'r','66':'f','55':'f','44':'f','33':'f','22':'f',
+      'AKs':'3','AQs':'r','AJs':'r','ATs':'r','A9s':'r','A8s':'f','A7s':'f','A6s':'f','A5s':'r','A4s':'f','A3s':'f','A2s':'f',
+      'AKo':'r','AQo':'r','AJo':'r','ATo':'f','A9o':'f','A8o':'f','A7o':'f','A6o':'f','A5o':'f','A4o':'f','A3o':'f','A2o':'f',
+      'KQs':'r','KJs':'r','KTs':'r','K9s':'f','K8s':'f','K7s':'f','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f',
+      'KQo':'r','KJo':'f','KTo':'f','K9o':'f','K8o':'f','K7o':'f','K6o':'f','K5o':'f','K4o':'f','K3o':'f','K2o':'f',
+      'QJs':'r','QTs':'r','Q9s':'f','Q8s':'f','Q7s':'f','Q6s':'f','Q5s':'f','Q4s':'f','Q3s':'f','Q2s':'f',
+      'QJo':'f','QTo':'f','Q9o':'f','Q8o':'f',
+      'JTs':'r','J9s':'f','J8s':'f',
+      'T9s':'r','T8s':'f',
+      '98s':'f',
+    }
+  },
+  CO: {
+    title: 'CutOff (CO)',
+    subtitle: '2e meilleure position · ~22% des mains · 3 joueurs derrière',
+    rules: [
+      { icon: '✅', text: '<strong>Open raise large</strong> : toutes paires, AXs, KXs, QJs+, suited connectors (T9s–76s), AXo, KQo–KJo' },
+      { icon: '🎯', text: '<strong>Steal efficace</strong> : si fold jusqu\'à toi, range encore plus large' },
+      { icon: '💡', text: 'Si BTN 3-bet souvent, resserre un peu et 4-bet les top mains.' },
+    ],
+    matrix: {
+      'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'r','99':'r','88':'r','77':'r','66':'r','55':'r','44':'r','33':'r','22':'r',
+      'AKs':'3','AQs':'3','AJs':'r','ATs':'r','A9s':'r','A8s':'r','A7s':'r','A6s':'r','A5s':'r','A4s':'r','A3s':'r','A2s':'r',
+      'AKo':'r','AQo':'r','AJo':'r','ATo':'r','A9o':'r','A8o':'f','A7o':'f','A6o':'f','A5o':'f','A4o':'f','A3o':'f','A2o':'f',
+      'KQs':'r','KJs':'r','KTs':'r','K9s':'r','K8s':'f','K7s':'f','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f',
+      'KQo':'r','KJo':'r','KTo':'f','K9o':'f',
+      'QJs':'r','QTs':'r','Q9s':'r','Q8s':'f',
+      'QJo':'r','QTo':'f',
+      'JTs':'r','J9s':'r','J8s':'f',
+      'JTo':'f',
+      'T9s':'r','T8s':'r','T7s':'f',
+      '98s':'r','97s':'f',
+      '87s':'r','76s':'r','65s':'f',
+    }
+  },
+  BTN: {
+    title: 'Button (BTN)',
+    subtitle: 'Meilleure position · ~40% des mains · SB + BB seulement',
+    rules: [
+      { icon: '✅', text: '<strong>Open très large</strong> : ~40% des mains. Toutes paires, la plupart des mains suited, beaucoup d\'offsuit raisonnables.' },
+      { icon: '🎯', text: '<strong>Steal agressif</strong> : si fold jusqu\'à BTN → ouvre quasi tout ce qui a une chance de gagner' },
+      { icon: '💡', text: 'Tu agiras en dernier post-flop = liberté maximale. Exploite ça.' },
+    ],
+    matrix: {
+      'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'3','99':'r','88':'r','77':'r','66':'r','55':'r','44':'r','33':'r','22':'r',
+      'AKs':'3','AQs':'3','AJs':'3','ATs':'r','A9s':'r','A8s':'r','A7s':'r','A6s':'r','A5s':'r','A4s':'r','A3s':'r','A2s':'r',
+      'AKo':'r','AQo':'r','AJo':'r','ATo':'r','A9o':'r','A8o':'r','A7o':'r','A6o':'r','A5o':'r','A4o':'f','A3o':'f','A2o':'f',
+      'KQs':'r','KJs':'r','KTs':'r','K9s':'r','K8s':'r','K7s':'r','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f',
+      'KQo':'r','KJo':'r','KTo':'r','K9o':'r','K8o':'f',
+      'QJs':'r','QTs':'r','Q9s':'r','Q8s':'r','Q7s':'f',
+      'QJo':'r','QTo':'r','Q9o':'f',
+      'JTs':'r','J9s':'r','J8s':'r','J7s':'f',
+      'JTo':'r','J9o':'f',
+      'T9s':'r','T8s':'r','T7s':'r','T6s':'f',
+      'T9o':'f',
+      '98s':'r','97s':'r','96s':'f',
+      '87s':'r','86s':'f',
+      '76s':'r','75s':'f',
+      '65s':'r','64s':'f',
+      '54s':'r',
+    }
+  },
+  SB: {
+    title: 'Small Blind (SB)',
+    subtitle: 'Trompeuse · Agis 1er post-flop · Jouer serré & agressif',
+    rules: [
+      { icon: '✅', text: '<strong>Open raise / complete</strong> avec de bonnes mains. Ne pas "compléter" avec n\'importe quoi.' },
+      { icon: '⚠️', text: '<strong>Tu agis 1er post-flop</strong> contre BB. Handicap majeur. Joue seulement les mains avec bonne valeur intrinsèque.' },
+      { icon: '💡', text: 'Vs un raise : défendre avec les bonnes mains, 3-bet les très bonnes. Pas de cold-call avec des mains marginales.' },
+    ],
+    matrix: {
+      'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'r','99':'r','88':'r','77':'r','66':'f','55':'f','44':'f','33':'f','22':'f',
+      'AKs':'3','AQs':'3','AJs':'r','ATs':'r','A9s':'r','A8s':'f','A7s':'f','A6s':'f','A5s':'r','A4s':'f','A3s':'f','A2s':'f',
+      'AKo':'r','AQo':'r','AJo':'r','ATo':'f','A9o':'f',
+      'KQs':'r','KJs':'r','KTs':'f',
+      'KQo':'r','KJo':'f',
+      'QJs':'r','QTs':'f',
+      'JTs':'r',
+      'T9s':'f',
+    }
+  },
+  BB: {
+    title: 'Big Blind (BB)',
+    subtitle: 'Défense large · Tu as déjà 1BB investi · Meilleure cote',
+    rules: [
+      { icon: '✅', text: '<strong>Défends plus large</strong> car tu as déjà 1BB dans le pot → meilleure cote pour appeler un raise' },
+      { icon: '🎯', text: '<strong>3-bet avec les mains premium</strong> (AA, KK, QQ, AKs) + quelques bluffs (suited connectors)' },
+      { icon: '💡', text: 'Vs un min-raise (2BB) tu reçois de bonnes cotes pour défendre avec beaucoup de mains. Vs gros raise (4BB+) → resserrer.' },
+    ],
+    matrix: {
+      'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'r','99':'r','88':'r','77':'r','66':'c','55':'c','44':'c','33':'c','22':'c',
+      'AKs':'3','AQs':'r','AJs':'r','ATs':'r','A9s':'c','A8s':'c','A7s':'c','A6s':'c','A5s':'c','A4s':'c','A3s':'c','A2s':'c',
+      'AKo':'r','AQo':'r','AJo':'r','ATo':'c','A9o':'c','A8o':'c','A7o':'f','A6o':'f','A5o':'f','A4o':'f','A3o':'f','A2o':'f',
+      'KQs':'r','KJs':'r','KTs':'c','K9s':'c','K8s':'c','K7s':'f','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f',
+      'KQo':'r','KJo':'c','KTo':'c','K9o':'f',
+      'QJs':'r','QTs':'c','Q9s':'c','Q8s':'f',
+      'QJo':'c','QTo':'f',
+      'JTs':'c','J9s':'c','J8s':'f',
+      'JTo':'f',
+      'T9s':'c','T8s':'c','T7s':'f',
+      '98s':'c','97s':'f',
+      '87s':'c','76s':'c','65s':'c','54s':'c',
+    }
+  }
+};
+
+function buildRangeGrid(position) {
+  const data = chartData[position];
+  const grid = document.getElementById('rangeGrid');
+  grid.innerHTML = '';
+  const matrix = data.matrix;
+
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 13; j++) {
+      const r1 = ranks[i], r2 = ranks[j];
+      let hand, suited;
+      if (i === j) { hand = r1+r2; suited = false; }
+      else if (i < j) { hand = r1+r2+'s'; suited = true; }
+      else { hand = r2+r1+'o'; suited = false; }
+
+      const action = matrix[hand] || 'f';
+      const cls = action === 'r' ? 'rc-raise' : action === 'c' ? 'rc-call' : action === '3' ? 'rc-3bet' : 'rc-fold';
+      
+      // Short label for display
+      let label = hand;
+      if (hand.length > 3) label = r1===r2 ? r1+r2 : (i<j ? r1+r2+'s' : r1+r2+'o');
+      // Even shorter for small cells
+      if (i===j) label = r1+r2;
+      else if (i<j) label = r1+r2;
+      else label = r2+r1;
+
+      const cell = document.createElement('div');
+      cell.className = 'range-cell ' + cls;
+      cell.textContent = label;
+      cell.title = hand;
+      cell.onclick = () => showChartHandDetail(hand, action, position);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function showChartHandDetail(hand, action, pos) {
+  const el = document.getElementById('chartHandDetail');
+  el.classList.add('show');
+  const actions = { 'r': 'Open Raise', 'c': 'Call', 'f': 'Fold', '3': '3-Bet / 4-Bet' };
+  const colors = { 'r': '#d4a843', 'c': '#3ecfca', 'f': '#4a4868', '3': '#e84545' };
+  document.getElementById('chdHand').textContent = hand;
+  document.getElementById('chdHand').style.color = colors[action] || '#4a4868';
+  const posName = chartData[pos].title;
+  document.getElementById('chdAction').innerHTML = `<strong style="color:${colors[action]}">${actions[action] || 'Fold'}</strong> depuis ${posName}`;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderChartRules(pos) {
+  const data = chartData[pos];
+  document.getElementById('chartRulesTitle').textContent = 'Règles pour ' + pos;
+  document.getElementById('chartRules').innerHTML = data.rules.map(r => `
+    <div class="rule-item">
+      <div class="rule-icon">${r.icon}</div>
+      <div class="rule-text">${r.text}</div>
+    </div>
+  `).join('');
+}
+
+function selectChart(pos, btn) {
+  document.querySelectorAll('.pos-sel-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const data = chartData[pos];
+  document.getElementById('chartTitle').textContent = data.title;
+  document.getElementById('chartSubtitle').textContent = data.subtitle;
+  document.getElementById('chartHandDetail').classList.remove('show');
+  buildRangeGrid(pos);
+  renderChartRules(pos);
+}
+
+// ═════════════ REVISION TIMER ═════════════
+let rtSecs = 15*60;
+let rtRunning = false;
+let rtInterval = null;
+
+function toggleRevisionTimer() {
+  if (rtRunning) {
+    clearInterval(rtInterval);
+    rtRunning = false;
+    document.getElementById('rtBtn').textContent = '▶ Reprendre';
+  } else {
+    rtRunning = true;
+    document.getElementById('rtBtn').textContent = '⏸ Pause';
+    rtInterval = setInterval(() => {
+      if (rtSecs <= 0) {
+        clearInterval(rtInterval);
+        rtRunning = false;
+        document.getElementById('rtDisplay').textContent = '✓ FINI';
+        document.getElementById('rtBtn').textContent = '✓ Complété';
+        return;
+      }
+      rtSecs--;
+      const m = Math.floor(rtSecs/60).toString().padStart(2,'0');
+      const s = (rtSecs%60).toString().padStart(2,'0');
+      document.getElementById('rtDisplay').textContent = m+':'+s;
+      document.getElementById('rtFill').style.width = ((15*60-rtSecs)/(15*60)*100)+'%';
+    }, 1000);
+  }
+}
+
+function resetRevisionTimer() {
+  clearInterval(rtInterval);
+  rtRunning = false;
+  rtSecs = 15*60;
+  document.getElementById('rtDisplay').textContent = '15:00';
+  document.getElementById('rtFill').style.width = '0%';
+  document.getElementById('rtBtn').textContent = '▶ Démarrer';
+}
+
+// ═════════════ CHECKLIST ═════════════
+function toggleCheck(el) {
+  el.classList.toggle('done');
+  if (el.classList.contains('done')) el.querySelector('.check-box2').textContent = '✓';
+  else el.querySelector('.check-box2').textContent = '';
+}
+
+// ═════════════ QUIZ ═════════════
+let quizAnswers = {};
+
+function revealQuiz(i, btn) {
+  document.getElementById('qa-'+i).style.display = 'block';
+  btn.style.display = 'none';
+  document.getElementById('qr-'+i).classList.add('show');
+}
+
+function rateQuiz(i, result) {
+  quizAnswers[i] = result;
+  const el = document.getElementById('qi-'+i);
+  el.classList.remove('correct','wrong');
+  el.classList.add(result);
+  const correct = Object.values(quizAnswers).filter(v=>v==='correct').length;
+  const total = Object.keys(quizAnswers).length;
+  document.getElementById('quizScore').textContent = correct+'/'+Math.max(total,5);
+  document.getElementById('scoreFill').style.width = (correct/5*100)+'%';
+}
+
+// ═════════════ INIT ═════════════
+buildRangeGrid('UTG');
+renderChartRules('UTG');
+</script>
+
+</body>
+</html>
