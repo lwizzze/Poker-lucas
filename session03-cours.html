@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Session 03 — Lire le board</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0910; --bg2:#111020; --surface:#16152a; --surface2:#1d1c35;
+  --border:#252440; --gold:#d4a843; --red:#e84545; --teal:#3ecfca;
+  --green:#4ecf7a; --text:#e8e6f5; --text-dim:#9896b8; --text-muted:#4a4868;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
+#app{height:100dvh;display:flex;flex-direction:column;}
+
+.header{padding:calc(var(–safe-top) + 12px) 16px 12px;background:var(–bg);border-bottom:1px solid var(–border);display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:20;}
+.back-btn{width:36px;height:36px;border-radius:10px;background:var(–surface);border:1px solid var(–border);color:var(–text-dim);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;text-decoration:none;}
+.header-info{flex:1;min-width:0;}
+.header-title{font-size:15px;font-weight:600;color:var(–text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-sub{font-size:11px;color:var(–text-muted);font-family:‘DM Mono’,monospace;letter-spacing:1px;}
+.timer-pill{background:var(–surface);border:1px solid var(–border);border-radius:20px;padding:6px 12px;font-family:‘DM Mono’,monospace;font-size:13px;color:var(–gold);cursor:pointer;flex-shrink:0;transition:all 0.2s;}
+.timer-pill.running{border-color:rgba(212,168,67,0.4);background:rgba(212,168,67,0.08);}
+
+.chapter-nav{display:flex;overflow-x:auto;gap:0;border-bottom:1px solid var(–border);flex-shrink:0;scrollbar-width:none;}
+.chapter-nav::-webkit-scrollbar{display:none;}
+.chapter-btn{flex-shrink:0;padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.chapter-btn.active{color:var(–gold);border-bottom-color:var(–gold);}
+
+.progress-bar{height:2px;background:var(–border);flex-shrink:0;}
+.progress-fill{height:100%;background:var(–gold);transition:width 0.5s ease;}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.chapter{display:none;padding:20px 16px 40px;}
+.chapter.active{display:block;}
+
+.section-tag{font-size:10px;font-family:‘DM Mono’,monospace;letter-spacing:3px;text-transform:uppercase;color:var(–gold);margin-bottom:6px;}
+.chapter-hero{background:linear-gradient(135deg,var(–surface) 0%,var(–bg2) 100%);border:1px solid var(–border);border-radius:14px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;}
+.chapter-hero::after{content:attr(data-icon);position:absolute;right:14px;bottom:-8px;font-size:72px;opacity:0.06;line-height:1;}
+.chapter-title{font-family:‘Playfair Display’,serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.2;}
+.chapter-desc{font-size:14px;color:var(–text-dim);font-style:italic;line-height:1.6;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.chip{font-size:11px;font-family:‘DM Mono’,monospace;padding:4px 10px;border-radius:20px;border:1px solid var(–border);color:var(–text-muted);}
+
+.block{background:var(–surface);border:1px solid var(–border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.block-header{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;}
+.block-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.bi-red{background:rgba(232,69,69,0.12);}
+.bi-gold{background:rgba(212,168,67,0.12);}
+.bi-teal{background:rgba(62,207,202,0.12);}
+.bi-green{background:rgba(78,207,122,0.12);}
+.bi-muted{background:var(–surface2);}
+.block-title{font-size:15px;font-weight:500;color:var(–text);flex:1;}
+.block-arrow{color:var(–text-muted);font-size:14px;transition:transform 0.25s;flex-shrink:0;}
+.block.open .block-arrow{transform:rotate(90deg);}
+.block-body{display:none;padding:0 16px 16px;border-top:1px solid var(–border);}
+.block.open .block-body{display:block;}
+.block-body p{font-size:14px;color:var(–text-dim);line-height:1.75;margin-top:12px;}
+.block-body strong{color:var(–text);}
+
+.info-box{border-radius:10px;padding:14px;margin-top:14px;}
+.info-box.teal{background:rgba(62,207,202,0.06);border:1px solid rgba(62,207,202,0.2);}
+.info-box.gold{background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.2);}
+.info-box.red{background:rgba(232,69,69,0.06);border:1px solid rgba(232,69,69,0.2);}
+.info-box.green{background:rgba(78,207,122,0.06);border:1px solid rgba(78,207,122,0.2);}
+.info-label{font-size:10px;font-family:‘DM Mono’,monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.info-box.teal .info-label{color:var(–teal);}
+.info-box.gold .info-label{color:var(–gold);}
+.info-box.red .info-label{color:var(–red);}
+.info-box.green .info-label{color:var(–green);}
+.info-box p{margin-top:0!important;font-style:italic;}
+.info-box.gold p{color:#d4b96a;}
+.info-box.teal p{color:#a0ede9;}
+.info-box.red p{color:#f0a0a0;}
+.info-box.green p{color:#a0e8bc;}
+
+ul.content-list{list-style:none;padding:0;margin-top:10px;}
+ul.content-list li{font-size:14px;color:var(–text-dim);padding:8px 0;border-bottom:1px solid var(–border);line-height:1.5;display:flex;gap:8px;}
+ul.content-list li:last-child{border-bottom:none;}
+ul.content-list li::before{content:‘→’;color:var(–gold);flex-shrink:0;}
+
+/* BOARD CARDS */
+.board-display{display:flex;gap:8px;justify-content:center;margin:16px 0;flex-wrap:wrap;}
+.bcard{background:var(–surface2);border:2px solid var(–border);border-radius:10px;padding:10px 14px;font-family:‘DM Mono’,monospace;font-size:20px;font-weight:700;min-width:52px;text-align:center;transition:all 0.2s;}
+.bcard.s{color:#a0cfff;border-color:rgba(160,207,255,0.3);}
+.bcard.h{color:#ff7070;border-color:rgba(255,112,112,0.3);}
+.bcard.d{color:#ff9f70;border-color:rgba(255,159,112,0.3);}
+.bcard.c{color:#70e070;border-color:rgba(112,224,112,0.3);}
+
+/* TEXTURE CARDS */
+.texture-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+.texture-card{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;}
+.texture-card.active{border-color:var(–gold);background:rgba(212,168,67,0.06);}
+.texture-card:active{transform:scale(0.97);}
+.texture-name{font-family:‘DM Mono’,monospace;font-size:12px;color:var(–gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.texture-board{display:flex;gap:4px;margin-bottom:8px;}
+.tc{font-family:‘DM Mono’,monospace;font-size:13px;font-weight:700;padding:4px 7px;border-radius:6px;background:var(–surface);}
+.tc.s{color:#a0cfff;} .tc.h{color:#ff7070;} .tc.d{color:#ff9f70;} .tc.c{color:#70e070;}
+.texture-desc{font-size:12px;color:var(–text-muted);line-height:1.5;}
+
+/* BOARD ANALYZER */
+.analyzer-wrap{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-top:14px;}
+.analyzer-title{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+.board-selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.board-btn{padding:8px 14px;background:var(–surface);border:1px solid var(–border);border-radius:8px;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;transition:all 0.2s;letter-spacing:1px;}
+.board-btn.active{background:var(–gold);border-color:var(–gold);color:var(–bg);font-weight:700;}
+.analysis-result{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px;min-height:80px;}
+.ar-title{font-family:‘DM Mono’,monospace;font-size:12px;color:var(–teal);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase;}
+.ar-text{font-size:13px;color:var(–text-dim);line-height:1.65;}
+.ar-text strong{color:var(–text);}
+
+/* RANGE ADVANTAGE */
+.range-adv-card{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.ra-pos{display:flex;gap:10px;align-items:center;margin-bottom:12px;}
+.ra-badge{font-family:‘DM Mono’,monospace;font-size:11px;padding:4px 12px;border-radius:20px;letter-spacing:1px;}
+.ra-vs{font-size:12px;color:var(–text-muted);font-family:‘DM Mono’,monospace;}
+.ra-winner{font-size:12px;font-family:‘DM Mono’,monospace;padding:4px 10px;border-radius:8px;}
+.ra-utg{background:rgba(232,69,69,0.15);border:1px solid rgba(232,69,69,0.3);color:#f08080;}
+.ra-bb{background:rgba(62,207,202,0.15);border:1px solid rgba(62,207,202,0.3);color:var(–teal);}
+.ra-neutral{background:var(–surface);border:1px solid var(–border);color:var(–text-muted);}
+.ra-board-cards{display:flex;gap:6px;margin-bottom:10px;}
+.ra-explain{font-size:13px;color:var(–text-dim);line-height:1.6;}
+.ra-explain strong{color:var(–text);}
+
+/* OUTS CALCULATOR */
+.outs-wrap{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-top:14px;}
+.outs-title{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+.draw-selector{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.draw-btn{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;}
+.draw-btn.selected{border-color:var(–teal);background:rgba(62,207,202,0.06);}
+.draw-name{font-size:14px;color:var(–text);font-weight:500;}
+.draw-outs{font-family:‘DM Mono’,monospace;font-size:13px;color:var(–teal);}
+.outs-result{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px;}
+.outs-big{font-family:‘Playfair Display’,serif;font-size:36px;font-weight:900;color:var(–gold);text-align:center;margin-bottom:4px;}
+.outs-sub{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–text-muted);text-align:center;letter-spacing:1px;margin-bottom:12px;}
+.outs-pcts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.outs-pct-card{background:var(–bg2);border:1px solid var(–border);border-radius:8px;padding:10px;text-align:center;}
+.outs-pct-val{font-family:‘DM Mono’,monospace;font-size:18px;font-weight:700;color:var(–teal);}
+.outs-pct-lbl{font-size:10px;color:var(–text-muted);font-family:‘DM Mono’,monospace;letter-spacing:1px;margin-top:2px;}
+
+/* QUIZ / REVISION */
+.revision-timer{background:linear-gradient(135deg,var(–surface),var(–bg2));border:1px solid var(–border);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;}
+.rt-display{font-family:‘Playfair Display’,serif;font-size:52px;font-weight:900;color:var(–gold);line-height:1;margin:8px 0;}
+.rt-label{font-family:‘DM Mono’,monospace;font-size:10px;letter-spacing:3px;color:var(–text-muted);text-transform:uppercase;}
+.rt-progress{height:3px;background:var(–border);border-radius:2px;margin:14px 0;}
+.rt-fill{height:100%;background:var(–gold);border-radius:2px;transition:width 1s linear;}
+.rt-btns{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+.rt-start{background:var(–gold);border:none;border-radius:10px;color:var(–bg);font-family:‘DM Mono’,monospace;font-size:13px;font-weight:500;padding:12px 28px;cursor:pointer;letter-spacing:1px;}
+.rt-reset{background:var(–surface);border:1px solid var(–border);border-radius:10px;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:13px;padding:12px 20px;cursor:pointer;}
+
+.score-block{background:var(–surface);border:1px solid var(–border);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;}
+.score-val{font-family:‘Playfair Display’,serif;font-size:44px;font-weight:900;color:var(–gold);}
+.score-lbl{font-family:‘DM Mono’,monospace;font-size:11px;color:var(–text-muted);letter-spacing:2px;margin-top:4px;text-transform:uppercase;}
+.score-bar{height:4px;background:var(–border);border-radius:2px;margin:14px 0;}
+.score-fill{height:100%;background:var(–gold);border-radius:2px;transition:width 0.5s;}
+
+.check-item{display:flex;align-items:flex-start;gap:12px;background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all 0.2s;}
+.check-item.done{border-color:rgba(78,207,122,0.3);background:rgba(78,207,122,0.04);}
+.check-box2{width:22px;height:22px;border-radius:6px;border:2px solid var(–border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s;margin-top:1px;}
+.check-item.done .check-box2{background:rgba(78,207,122,0.2);border-color:var(–green);color:var(–green);}
+.check-text{font-size:14px;color:var(–text-dim);line-height:1.5;flex:1;}
+.check-item.done .check-text{color:var(–text-muted);text-decoration:line-through;}
+
+.quiz-item{background:var(–surface);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.quiz-num{font-size:10px;font-family:‘DM Mono’,monospace;color:var(–text-muted);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;}
+.quiz-q{font-size:15px;color:var(–text);font-style:italic;margin-bottom:12px;line-height:1.5;}
+.quiz-reveal{width:100%;background:transparent;border:1px solid var(–border);border-radius:8px;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px;cursor:pointer;}
+.quiz-ans{display:none;background:#0d1f0d;border:1px solid rgba(78,207,122,0.2);border-radius:8px;padding:12px;margin-top:10px;font-size:13px;color:#7dde7d;line-height:1.6;}
+.quiz-rate{display:none;gap:8px;margin-top:10px;}
+.quiz-rate.show{display:flex;}
+.quiz-correct{flex:1;background:rgba(62,207,202,0.1);border:1px solid rgba(62,207,202,0.3);color:var(–teal);border-radius:8px;padding:9px;font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;letter-spacing:1px;}
+.quiz-wrong{flex:1;background:rgba(232,69,69,0.1);border:1px solid rgba(232,69,69,0.3);color:var(–red);border-radius:8px;padding:9px;font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;letter-spacing:1px;}
+.quiz-item.correct{border-color:rgba(62,207,202,0.3);}
+.quiz-item.wrong{border-color:rgba(232,69,69,0.3);}
+
+.bottom-nav{padding-bottom:calc(var(–safe-bottom) + 4px);background:rgba(10,9,16,0.97);border-top:1px solid var(–border);display:flex;flex-shrink:0;backdrop-filter:blur(20px);}
+.next-chapter-btn{flex:1;padding:12px;background:var(–gold);border:none;color:var(–bg);font-family:‘DM Mono’,monospace;font-size:13px;font-weight:500;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+.prev-chapter-btn{width:56px;padding:12px;background:var(–surface);border:none;border-right:1px solid var(–border);color:var(–text-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+<div class="header">
+  <a class="back-btn" href="index.html">‹</a>
+  <div class="header-info">
+    <div class="header-title">Session 03 — Lire le board</div>
+    <div class="header-sub" id="chapterLabel">CHAPITRE 1/4 · TEXTURES</div>
+  </div>
+  <div class="timer-pill" id="globalTimer" onclick="toggleGlobalTimer()">25:00</div>
+</div>
+
+<div class="chapter-nav">
+  <button class="chapter-btn active" onclick="goChapter(0,this)">① Textures</button>
+  <button class="chapter-btn" onclick="goChapter(1,this)">② Range adv.</button>
+  <button class="chapter-btn" onclick="goChapter(2,this)">③ Draws</button>
+  <button class="chapter-btn" onclick="goChapter(3,this)">④ Révision</button>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:12%"></div></div>
+
+<div class="scroll-area">
+
+<!-- ══════════════════════════════
+     CHAPITRE 1 — TEXTURES (25 min)
+══════════════════════════════ -->
+
+<div class="chapter active" id="ch-0">
+  <div class="chapter-hero" data-icon="🃏">
+    <div class="section-tag">① Textures de board · 25 min</div>
+    <div class="chapter-title">Lire un flop en 5 secondes</div>
+    <div class="chapter-desc">Chaque flop raconte une histoire. Apprendre à lire la texture du board en quelques secondes est une compétence fondamentale.</div>
+    <div class="chips">
+      <span class="chip">⏱ 25 min</span>
+      <span class="chip">🃏 Sec vs Drawant</span>
+      <span class="chip">🎨 Rainbow / Two-tone / Monotone</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">📊</div>
+      <div class="block-title">Les 2 grandes familles de boards</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Tout board peut être classé sur un spectre allant de <strong>très sec</strong> à <strong>très drawant</strong>. Cette distinction détermine ta stratégie de mise.</p>
+      <ul class="content-list">
+        <li><strong>Board sec :</strong> peu de tirages possibles. Ex : K♠7♦2♣ rainbow. Peu de draws, les mains faites dominent. Mises plus petites car peu de protection nécessaire.</li>
+        <li><strong>Board drawant :</strong> beaucoup de tirages possibles. Ex : J♥T♥9♦. Quintes et couleurs possibles. Mises plus grandes pour protéger tes mains faites.</li>
+        <li><strong>Board intermédiaire :</strong> quelques draws possibles mais pas extrêmes. Ex : K♠J♥8♦. Analyse cas par cas.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 Règle pratique</div>
+        <p>Board sec → mise petite (25–40%). Board drawant → mise grande (60–100%). Le but est de charger le bon prix pour les draws adverses.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🎨</div>
+      <div class="block-title">Rainbow, Two-tone, Monotone</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>La couleur des cartes est cruciale. Elle détermine si un <strong>flush draw</strong> (tirage couleur) est possible.</p>
+
+```
+  <div class="texture-grid">
+    <div class="texture-card active" id="tc-0" onclick="selectTexture(0)">
+      <div class="texture-name">Rainbow</div>
+      <div class="texture-board">
+        <span class="tc s">K♠</span>
+        <span class="tc h">7♥</span>
+        <span class="tc d">2♦</span>
+      </div>
+      <div class="texture-desc">3 couleurs différentes. Aucun flush draw possible. Board le plus sec.</div>
+    </div>
+    <div class="texture-card" id="tc-1" onclick="selectTexture(1)">
+      <div class="texture-name">Two-tone</div>
+      <div class="texture-board">
+        <span class="tc h">J♥</span>
+        <span class="tc h">T♥</span>
+        <span class="tc s">9♠</span>
+      </div>
+      <div class="texture-desc">2 cartes de même couleur. Un flush draw est possible. Board moyen.</div>
+    </div>
+    <div class="texture-card" id="tc-2" onclick="selectTexture(2)">
+      <div class="texture-name">Monotone</div>
+      <div class="texture-board">
+        <span class="tc h">A♥</span>
+        <span class="tc h">8♥</span>
+        <span class="tc h">3♥</span>
+      </div>
+      <div class="texture-desc">3 cartes de même couleur. Flush possible dès le flop. Très dangereux.</div>
+    </div>
+    <div class="texture-card" id="tc-3" onclick="selectTexture(3)">
+      <div class="texture-name">Connecté</div>
+      <div class="texture-board">
+        <span class="tc s">8♠</span>
+        <span class="tc h">7♥</span>
+        <span class="tc d">6♦</span>
+      </div>
+      <div class="texture-desc">Cartes consécutives. Quinte possible. Très drawant même sans couleur.</div>
+    </div>
+  </div>
+
+  <div class="info-box teal" style="margin-top:14px;" id="textureInfo">
+    <div class="info-label">Rainbow — K♠7♥2♦</div>
+    <p>Board le plus sec possible. Aucun flush draw, peu de straight draws. Tu peux miser plus petit pour extraire de la value car l'adversaire a peu de raisons de rester avec une main faible.</p>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- BOARD ANALYZER -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">🔍</div>
+      <div class="block-title">Analyseur de board — Touche un flop</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Sélectionne un board pour voir son analyse complète.</p>
+      <div class="analyzer-wrap">
+        <div class="analyzer-title">Sélectionne un board</div>
+        <div class="board-selector">
+          <button class="board-btn active" onclick="analyzeBoard('K72r',this)">K♠7♦2♣</button>
+          <button class="board-btn" onclick="analyzeBoard('JT9tt',this)">J♥T♥9♠</button>
+          <button class="board-btn" onclick="analyzeBoard('A85r',this)">A♠8♦5♣</button>
+          <button class="board-btn" onclick="analyzeBoard('987tt',this)">9♥8♥7♠</button>
+          <button class="board-btn" onclick="analyzeBoard('QQ2r',this)">Q♠Q♦2♣</button>
+          <button class="board-btn" onclick="analyzeBoard('AKQtt',this)">A♠K♠Q♥</button>
+        </div>
+        <div class="board-display" id="analyzerBoard">
+          <div class="bcard s">K♠</div>
+          <div class="bcard d">7♦</div>
+          <div class="bcard c">2♣</div>
+        </div>
+        <div class="analysis-result">
+          <div class="ar-title" id="arTitle">K♠7♦2♣ — Board sec, rainbow</div>
+          <div class="ar-text" id="arText">
+            <strong>Texture :</strong> Sec · Rainbow · Peu connecté<br>
+            <strong>Flush draw :</strong> Impossible<br>
+            <strong>Straight draw :</strong> Très limité (A3-A4, 65, 45)<br>
+            <strong>Stratégie :</strong> Mise petite (25–40%). Board qui favorise les mains faites. C-bet très fréquent ici.<br>
+            <strong>Avantage :</strong> Range UTG/EP favorable (K et A hauts).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">⚡</div>
+      <div class="block-title">Comment lire un board en 5 secondes</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Un pro lit un board en quelques secondes. Voici la méthode en 3 étapes :</p>
+      <ul class="content-list">
+        <li><strong>Étape 1 — Les couleurs :</strong> compte les couleurs. 3 couleurs = rainbow. 2 mêmes = two-tone (flush draw possible). 3 mêmes = monotone (flush possible).</li>
+        <li><strong>Étape 2 — La connexité :</strong> les cartes sont-elles proches ? 3 cartes consécutives = très drawant. Cartes espacées = plus sec. Paires sur le board = situation spéciale.</li>
+        <li><strong>Étape 3 — La hauteur :</strong> board high (A, K, Q) ou board low (6, 5, 4) ? Un board high favorise souvent la range de l'agresseur pré-flop. Un board low favorise les blinds.</li>
+      </ul>
+      <div class="info-box teal">
+        <div class="info-label">Exercice mental</div>
+        <p>À chaque flop, dis-toi mentalement : "Rainbow/Two-tone/Monotone — Connecté/Semi-connecté/Sec — High/Low." Ça prend 3 secondes et change ta lecture du spot.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CHAPITRE 2 — RANGE ADVANTAGE (30 min)
+══════════════════════════════════════ -->
+
+<div class="chapter" id="ch-1">
+  <div class="chapter-hero" data-icon="⚔️">
+    <div class="section-tag">② Range advantage · 30 min</div>
+    <div class="chapter-title">Qui bénéficie du flop ?</div>
+    <div class="chapter-desc">Chaque flop avantage une range sur l'autre. Comprendre quel joueur bénéficie du board est la clé pour décider d'attaquer ou de défendre.</div>
+    <div class="chips">
+      <span class="chip">⏱ 30 min</span>
+      <span class="chip">⚔️ Range advantage</span>
+      <span class="chip">📊 Equity distribution</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">⚔️</div>
+      <div class="block-title">Qu'est-ce que le range advantage ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Le <strong>range advantage</strong> signifie qu'une position a statistiquement de meilleures mains sur un board donné. Ça détermine qui peut attaquer agressivement et qui doit être prudent.</p>
+      <ul class="content-list">
+        <li><strong>Exemple :</strong> UTG range = AA,KK,QQ,JJ,AK,AQ... Sur un board A♠7♦2♣ → UTG a beaucoup de As dans sa range. BB (qui défend large) a moins de As → UTG a l'avantage.</li>
+        <li><strong>Inverse :</strong> Sur un board 7♦5♣2♠ → BB a plus de mains basses (52s, 64s) que UTG qui ne joue pas ces mains. BB a l'avantage sur ce board low.</li>
+        <li><strong>Impact stratégique :</strong> Avec range advantage → miser plus, miser plus souvent. Sans range advantage → être plus prudent, check plus souvent.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">💡 Résumé</div>
+        <p>Avant de c-bet, demande-toi : "Ce board avantage ma range ou celle de l'adversaire ?" Si ta range est avantagée → c-bet souvent. Si non → être plus sélectif.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">📊</div>
+      <div class="block-title">Exemples concrets — Qui a l'avantage ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Voici des situations réelles avec UTG vs BB (le spot le plus commun) :</p>
+
+```
+  <div class="range-adv-card">
+    <div class="ra-pos">
+      <span class="ra-badge ra-utg">UTG</span>
+      <span class="ra-vs">vs</span>
+      <span class="ra-badge ra-bb">BB</span>
+      <span class="ra-winner ra-utg" style="margin-left:auto;">UTG gagne ✓</span>
+    </div>
+    <div class="ra-board-cards">
+      <div class="bcard s" style="font-size:16px;padding:8px 10px;">A♠</div>
+      <div class="bcard d" style="font-size:16px;padding:8px 10px;">K♦</div>
+      <div class="bcard c" style="font-size:16px;padding:8px 10px;">7♣</div>
+    </div>
+    <div class="ra-explain">
+      UTG a beaucoup de <strong>AK, AQ, AA, KK</strong> dans sa range. BB défend avec des mains comme K9s, A2s mais beaucoup moins de top paires fortes. Sur AK7, UTG a un <strong>avantage de range massif</strong> → c-bet quasi systématique.
+    </div>
+  </div>
+
+  <div class="range-adv-card">
+    <div class="ra-pos">
+      <span class="ra-badge ra-utg">UTG</span>
+      <span class="ra-vs">vs</span>
+      <span class="ra-badge ra-bb">BB</span>
+      <span class="ra-winner ra-bb" style="margin-left:auto;">BB gagne ✓</span>
+    </div>
+    <div class="ra-board-cards">
+      <div class="bcard h" style="font-size:16px;padding:8px 10px;">7♥</div>
+      <div class="bcard s" style="font-size:16px;padding:8px 10px;">5♠</div>
+      <div class="bcard d" style="font-size:16px;padding:8px 10px;">2♦</div>
+    </div>
+    <div class="ra-explain">
+      UTG ne joue pas 75s, 52s, 64s... BB défend avec <strong>toutes ces mains basses</strong>. Sur 752, BB touche beaucoup plus souvent deux paires, trips, sets. UTG a peu de combinaisons ici → <strong>c-bet moins fréquent, plus petit</strong>.
+    </div>
+  </div>
+
+  <div class="range-adv-card">
+    <div class="ra-pos">
+      <span class="ra-badge ra-utg">UTG</span>
+      <span class="ra-vs">vs</span>
+      <span class="ra-badge ra-bb">BB</span>
+      <span class="ra-winner ra-neutral" style="margin-left:auto;">Neutre ≈</span>
+    </div>
+    <div class="ra-board-cards">
+      <div class="bcard s" style="font-size:16px;padding:8px 10px;">J♠</div>
+      <div class="bcard h" style="font-size:16px;padding:8px 10px;">T♥</div>
+      <div class="bcard d" style="font-size:16px;padding:8px 10px;">9♦</div>
+    </div>
+    <div class="ra-explain">
+      Sur JT9 connecté, les deux ranges ont des draws et des mains faites. UTG a JJ, TT, 99 (sets) mais BB a QJs, 87s (quintes). C'est un board <strong>neutre</strong> → les deux joueurs ont des mains fortes. C-bet possible mais avec prudence.
+    </div>
+  </div>
+
+  <div class="range-adv-card">
+    <div class="ra-pos">
+      <span class="ra-badge ra-utg">BTN</span>
+      <span class="ra-vs">vs</span>
+      <span class="ra-badge ra-bb">BB</span>
+      <span class="ra-winner ra-utg" style="margin-left:auto;">BTN gagne ✓</span>
+    </div>
+    <div class="ra-board-cards">
+      <div class="bcard s" style="font-size:16px;padding:8px 10px;">A♠</div>
+      <div class="bcard h" style="font-size:16px;padding:8px 10px;">3♥</div>
+      <div class="bcard d" style="font-size:16px;padding:8px 10px;">2♦</div>
+    </div>
+    <div class="ra-explain">
+      BTN a une range large incluant <strong>A2s, A3s, A4s, A5s</strong> — toutes ces mains touchent le board ! BB a certes des mains basses mais BTN a aussi l'avantage de <strong>position post-flop</strong>. Double avantage.
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">🎯</div>
+      <div class="block-title">Adapter sa stratégie selon l'avantage</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Le range advantage dicte directement ta fréquence et taille de mise.</p>
+      <ul class="content-list">
+        <li><strong>Tu as l'avantage :</strong> c-bet fréquent (60–80%), taille standard (40–60% pot). Tu peux représenter toute ta range forte.</li>
+        <li><strong>Avantage neutre :</strong> c-bet sélectif (40–50%), choisir les bons boards parmi ta range. Prefer les boards qui touchent plus ta range spécifique.</li>
+        <li><strong>Désavantage de range :</strong> c-bet petit et peu fréquent (25–35%), ou check souvent. Garder tes bluffs pour des spots avec plus de fold equity.</li>
+      </ul>
+      <div class="info-box red">
+        <div class="info-label">⚠️ Erreur fréquente</div>
+        <p>C-beter systématiquement sans tenir compte du range advantage. Sur un board 752 rainbow en tant qu'UTG, un c-bet est souvent une erreur — tu ne touches pas ce board et BB peut facilement défendre ou attaquer.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">🔄</div>
+      <div class="block-title">Les boards "pairés" — Situation spéciale</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Quand le flop contient une paire (ex: K♠K♦7♣ ou 9♥9♠3♦), les dynamiques changent complètement.</p>
+      <ul class="content-list">
+        <li><strong>Board pairé high (KK7) :</strong> l'agresseur pré-flop a plus de KK dans sa range. Les trips sont rares pour les deux. Mises petites souvent correctes.</li>
+        <li><strong>Board pairé low (992) :</strong> les deux ranges peuvent avoir 99, 22. Board très sec qui favorise le check-check souvent.</li>
+        <li><strong>Bluff sur board pairé :</strong> très efficace car les mains faites sont rares pour les deux players. L'adversaire a souvent juste "une carte haute".</li>
+      </ul>
+      <div class="info-box teal">
+        <div class="info-label">💡 Astuce</div>
+        <p>Sur un board pairé, beaucoup de joueurs overfolden car ils pensent que l'adversaire a le trips. Exploite ça en bluffant plus souvent sur ces boards.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CHAPITRE 3 — DRAWS ET OUTS (25 min)
+══════════════════════════════════════ -->
+
+<div class="chapter" id="ch-2">
+  <div class="chapter-hero" data-icon="🎯">
+    <div class="section-tag">③ Draws et outs · 25 min</div>
+    <div class="chapter-title">Compter ses outs rapidement</div>
+    <div class="chapter-desc">Savoir combien d'outs tu as et quelle est ta probabilité de compléter est une compétence qui se calcule en quelques secondes.</div>
+    <div class="chips">
+      <span class="chip">⏱ 25 min</span>
+      <span class="chip">🎯 Flush & Straight draw</span>
+      <span class="chip">🔢 Règle des 2 et 4</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">📖</div>
+      <div class="block-title">Les types de draws</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li><strong>Flush draw (tirage couleur) :</strong> 4 cartes de même couleur. Il manque 1 carte pour faire la couleur. 9 outs restants dans le deck.</li>
+        <li><strong>Open-ended straight draw (OESD) :</strong> 4 cartes consécutives, la quinte peut se compléter des deux côtés. Ex : 8-9-T-J → 7 ou Q complète. 8 outs.</li>
+        <li><strong>Gutshot straight draw :</strong> tirage à la quinte "intérieur". Ex : 8-9-J-Q → seul le T complète. 4 outs seulement. Moins puissant.</li>
+        <li><strong>Combo draw :</strong> flush draw + straight draw simultanément. Ex : 8♥9♥ sur T♥J♦Q♥. 15 outs ! Main extrêmement puissante.</li>
+        <li><strong>Overcards :</strong> tu as deux cartes plus hautes que le board. Ex : AK sur 8-7-2. 6 outs (3 As + 3 Rois). Moins fiable.</li>
+      </ul>
+      <div class="info-box teal">
+        <div class="info-label">💡 Hiérarchie des draws</div>
+        <p>Combo draw (15 outs) → Flush draw (9 outs) → OESD (8 outs) → Gutshot (4 outs). Plus il y a d'outs, plus le draw est puissant et justifie des mises agressives (semi-bluff).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🔢</div>
+      <div class="block-title">La règle des 2 et 4 — Calcul rapide</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>La <strong>règle des 2 et 4</strong> permet de calculer ta probabilité de compléter en quelques secondes, sans calculatrice.</p>
+      <ul class="content-list">
+        <li><strong>Au flop (2 cartes à venir) :</strong> outs × 4 = % approximatif de compléter</li>
+        <li><strong>Au turn (1 carte à venir) :</strong> outs × 2 = % approximatif de compléter</li>
+        <li><strong>Exemple flush draw :</strong> 9 outs × 4 = 36% au flop. 9 outs × 2 = 18% au turn.</li>
+        <li><strong>Exemple OESD :</strong> 8 outs × 4 = 32% au flop. 8 outs × 2 = 16% au turn.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">Précision</div>
+        <p>Cette règle donne une approximation à ±2%. Suffisamment précis pour prendre des décisions en temps réel. Les pros utilisent cette méthode systématiquement.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUTS CALCULATOR -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">🎮</div>
+      <div class="block-title">Calculateur d'outs interactif</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Sélectionne ton type de draw pour voir tes probabilités.</p>
+      <div class="outs-wrap">
+        <div class="outs-title">Ton draw</div>
+        <div class="draw-selector">
+          <div class="draw-btn selected" id="draw-0" onclick="selectDraw(0)">
+            <span class="draw-name">Flush draw</span>
+            <span class="draw-outs">9 outs</span>
+          </div>
+          <div class="draw-btn" id="draw-1" onclick="selectDraw(1)">
+            <span class="draw-name">Open-ended straight draw</span>
+            <span class="draw-outs">8 outs</span>
+          </div>
+          <div class="draw-btn" id="draw-2" onclick="selectDraw(2)">
+            <span class="draw-name">Combo draw (flush + straight)</span>
+            <span class="draw-outs">15 outs</span>
+          </div>
+          <div class="draw-btn" id="draw-3" onclick="selectDraw(3)">
+            <span class="draw-name">Gutshot straight draw</span>
+            <span class="draw-outs">4 outs</span>
+          </div>
+          <div class="draw-btn" id="draw-4" onclick="selectDraw(4)">
+            <span class="draw-name">Overcards (AK sur board bas)</span>
+            <span class="draw-outs">6 outs</span>
+          </div>
+          <div class="draw-btn" id="draw-5" onclick="selectDraw(5)">
+            <span class="draw-name">Set mining (paire → set)</span>
+            <span class="draw-outs">2 outs</span>
+          </div>
+        </div>
+        <div class="outs-result">
+          <div class="outs-big" id="outsNum">9</div>
+          <div class="outs-sub" id="outsLabel">OUTS — FLUSH DRAW</div>
+          <div class="outs-pcts">
+            <div class="outs-pct-card">
+              <div class="outs-pct-val" id="floatPct">36%</div>
+              <div class="outs-pct-lbl">AU FLOP<br>(×4)</div>
+            </div>
+            <div class="outs-pct-card">
+              <div class="outs-pct-val" id="turnPct">18%</div>
+              <div class="outs-pct-lbl">AU TURN<br>(×2)</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:13px;color:var(--text-dim);line-height:1.6;" id="drawAdvice">
+            Flush draw = draw très fort. Vaut la peine de semi-bluffer au flop. Avec 36% de chance de compléter, tu peux miser agressivement pour ajouter du fold equity.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">💡</div>
+      <div class="block-title">Draws et pot odds — Est-ce profitable d'appeler ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Connaître ses outs ne suffit pas. Il faut les comparer aux <strong>pot odds</strong> (cotes du pot) pour savoir si appeler est profitable.</p>
+      <ul class="content-list">
+        <li><strong>Pot odds :</strong> si le pot est 100 et l'adversaire mise 50, tu appelles 50 pour gagner 150 → cotes de 3:1 → tu dois gagner 25% du temps.</li>
+        <li><strong>Flush draw vs pot odds :</strong> 36% de compléter au flop. Si les cotes sont 3:1 (25% requis) → appeler est très profitable.</li>
+        <li><strong>Gutshot vs pot odds :</strong> 16% de compléter au flop. Si l'adversaire mise 75% pot → cotes de ~2.3:1 (30% requis) → appeler n'est PAS profitable.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 La formule</div>
+        <p>Si tes % de compléter (règle 2 et 4) > % requis par les pot odds → appeler est profitable. Sinon → fold sauf si tu as de bonnes implied odds.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-muted">⚠️</div>
+      <div class="block-title">Les draws dangereux — Attention aux "dirty outs"</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Tous les outs ne se valent pas. Certains outs complètent ton draw mais donnent une main encore meilleure à l'adversaire — ce sont les <strong>"dirty outs"</strong>.</p>
+      <ul class="content-list">
+        <li><strong>Exemple :</strong> tu as 8♥9♥ sur K♥J♦2♥. Tu as un flush draw (9 outs). Mais si un cœur tombe et que l'adversaire a A♥ → il a le nut flush, tu perds quand même.</li>
+        <li><strong>Contre-exemple :</strong> tu as A♥8♥ → tu as le nut flush draw (aucun dirty out sur les couleurs car tu as l'As de cœur).</li>
+        <li><strong>Straight draw dirty :</strong> tu as 56 sur 7-8-K. Un 4 ou 9 complète ta quinte, mais donne peut-être un flush à l'adversaire sur un board two-tone.</li>
+      </ul>
+      <div class="info-box red">
+        <div class="info-label">⚠️ Rappel</div>
+        <p>Les outs "sales" réduisent ta vraie probabilité de gagner. Toujours évaluer si tes outs sont "propres" (nut draw) ou "sales" (dominated draw).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     CHAPITRE 4 — RÉVISION (15 min)
+══════════════════════════════════════ -->
+
+<div class="chapter" id="ch-3">
+  <div class="chapter-hero" data-icon="🎯">
+    <div class="section-tag">④ Révision active · 15 min</div>
+    <div class="chapter-title">Test final & mémorisation</div>
+    <div class="chapter-desc">Timer, checklist et 5 questions sur les textures de board, le range advantage et les draws.</div>
+    <div class="chips">
+      <span class="chip">⏱ 15 min</span>
+      <span class="chip">✅ Checklist</span>
+      <span class="chip">🎯 5 questions</span>
+    </div>
+  </div>
+
+  <div class="revision-timer">
+    <div class="rt-label">TIMER DE RÉVISION</div>
+    <div class="rt-display" id="rtDisplay">15:00</div>
+    <div class="rt-progress"><div class="rt-fill" id="rtFill" style="width:0%"></div></div>
+    <div class="rt-btns">
+      <button class="rt-start" id="rtBtn" onclick="toggleRevisionTimer()">▶ Démarrer</button>
+      <button class="rt-reset" onclick="resetRevisionTimer()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="score-block">
+    <div class="score-val" id="quizScore">0/5</div>
+    <div class="score-lbl">Score Quiz</div>
+    <div class="score-bar"><div class="score-fill" id="scoreFill" style="width:0%"></div></div>
+  </div>
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Checklist</div>
+
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je sais distinguer un board sec d'un board drawant</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je connais Rainbow / Two-tone / Monotone et leur impact</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je comprends le range advantage et comment l'utiliser</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je connais les 4 types de draws et leurs outs (flush=9, OESD=8, gutshot=4, combo=15)</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je maîtrise la règle des 2 et 4 pour calculer mes probabilités</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je sais comparer mes outs aux pot odds pour décider d'appeler</div>
+  </div>
+  <div class="check-item" onclick="toggleCheck(this)">
+    <div class="check-box2"></div>
+    <div class="check-text">Je connais le concept de "dirty outs" (outs qui ne gagnent pas vraiment)</div>
+  </div>
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin:20px 0 10px;">Quiz final</div>
+
+  <div class="quiz-item" id="qi-0">
+    <div class="quiz-num">Question 01</div>
+    <div class="quiz-q">Le flop tombe J♥T♥9♠. Comment décrirais-tu ce board et quelle taille de mise utiliser ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(0,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-0">Board <strong>extrêmement drawant</strong> : two-tone (deux cœurs), très connecté (JT9 = quinte possible avec Q ou 8), beaucoup de draws possibles. Stratégie : <strong>mise grande (70–100% pot)</strong> si tu as une main faite pour charger un mauvais prix aux draws adverses. Ce board est dangereux pour les mains comme top pair — tu dois protéger agressivement.</div>
+    <div class="quiz-rate" id="qr-0">
+      <button class="quiz-correct" onclick="rateQuiz(0,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(0,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-1">
+    <div class="quiz-num">Question 02</div>
+    <div class="quiz-q">Tu as ouvert depuis UTG. Le flop tombe 7♠5♦2♣. Le BB check. Dois-tu c-bet ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(1,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-1">Non — ou du moins de façon très sélective. Sur 752 rainbow, <strong>BB a l'avantage de range</strong> : il défend avec 75s, 52s, 64s, toutes les petites paires qui touchent ce board. UTG ne joue pas ces mains. C'est un spot où <strong>check est souvent meilleur</strong> depuis UTG, sauf si tu as un overpair ou une main très forte sur ce board.</div>
+    <div class="quiz-rate" id="qr-1">
+      <button class="quiz-correct" onclick="rateQuiz(1,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(1,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-2">
+    <div class="quiz-num">Question 03</div>
+    <div class="quiz-q">Tu as 8♥9♥ sur un flop K♥J♦2♥. Combien d'outs as-tu et quelle est ta probabilité de compléter au flop ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(2,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-2">Tu as un <strong>flush draw = 9 outs</strong>. Règle des 4 : 9 × 4 = <strong>36% au flop</strong> (avec 2 cartes à venir). Au turn : 9 × 2 = 18%. Attention : si l'adversaire a A♥, tes outs ne sont pas tous "propres" — il aurait le nut flush. Mais avec 9 outs bruts, c'est un draw suffisamment fort pour semi-bluffer.</div>
+    <div class="quiz-rate" id="qr-2">
+      <button class="quiz-correct" onclick="rateQuiz(2,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(2,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-3">
+    <div class="quiz-num">Question 04</div>
+    <div class="quiz-q">Le pot est 80BB. L'adversaire mise 40BB. Tu as un gutshot (4 outs). Est-ce profitable d'appeler ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(3,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-3">Calcul : pot total si tu call = 80 + 40 + 40 = 160BB. Tu payes 40 pour en gagner 160 → cotes de <strong>4:1</strong> → tu dois gagner 20% du temps. Gutshot au turn = 4 outs × 2 = <strong>8%</strong>. 8% &lt; 20% → <strong>appeler n'est PAS profitable</strong> selon les pot odds seuls. Sauf si tu as d'excellentes implied odds (stacks profonds, adversaire qui paye énormément quand tu complètes).</div>
+    <div class="quiz-rate" id="qr-3">
+      <button class="quiz-correct" onclick="rateQuiz(3,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(3,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="quiz-item" id="qi-4">
+    <div class="quiz-num">Question 05</div>
+    <div class="quiz-q">Tu as T♠J♠ sur un flop Q♠9♥3♠. Quel est ton draw et combien d'outs as-tu ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(4,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-4">Tu as un <strong>combo draw</strong> exceptionnel : <br>• <strong>Open-ended straight draw</strong> : K ou 8 complète ta quinte (8 outs)<br>• <strong>Flush draw</strong> : n'importe quel pique complète ta couleur (9 outs)<br>Mais attention aux doublons : K♠ et 8♠ comptent dans les deux → total ≈ <strong>15 outs</strong>. Règle des 4 : 15 × 4 = <strong>60% de compléter au flop</strong> ! Tu es favori pour faire une très bonne main. Semi-bluff agressif recommandé.</div>
+    <div class="quiz-rate" id="qr-4">
+      <button class="quiz-correct" onclick="rateQuiz(4,'correct')">✓ Compris</button>
+      <button class="quiz-wrong" onclick="rateQuiz(4,'wrong')">✗ À revoir</button>
+    </div>
+  </div>
+
+  <div class="info-box gold" style="margin-top:20px;">
+    <div class="info-label">🏆 Règle d'or — Session 03</div>
+    <p>"Lis le board en 3 secondes : couleur (rainbow/two-tone/monotone), connexité (sec/drawant), hauteur (high/low). Compte tes outs, applique la règle des 2 et 4, compare aux pot odds. Toujours savoir si tu as l'avantage de range."</p>
+  </div>
+</div>
+
+</div><!-- end scroll-area -->
+
+<div class="bottom-nav">
+  <button class="prev-chapter-btn" id="prevBtn" onclick="prevChapter()" style="display:none">‹</button>
+  <button class="next-chapter-btn" id="nextBtn" onclick="nextChapter()">② Range advantage →</button>
+</div>
+
+</div>
+
+<script>
+let currentChapter = 0;
+const chapterLabels = ['CHAPITRE 1/4 · TEXTURES','CHAPITRE 2/4 · RANGE ADVANTAGE','CHAPITRE 3/4 · DRAWS & OUTS','CHAPITRE 4/4 · RÉVISION'];
+const nextLabels = ['② Range advantage →',"③ Draws & outs →",'④ Révision →','✓ Session terminée !'];
+const progressPcts = [12,37,62,100];
+const chapterTimes = [25*60,30*60,25*60,15*60];
+
+function goChapter(n,btn){
+  document.querySelectorAll('.chapter').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.chapter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ch-'+n).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else document.querySelectorAll('.chapter-btn')[n].classList.add('active');
+  document.querySelector('.scroll-area').scrollTop=0;
+  currentChapter=n;
+  document.getElementById('chapterLabel').textContent=chapterLabels[n];
+  document.getElementById('progressFill').style.width=progressPcts[n]+'%';
+  document.getElementById('prevBtn').style.display=n===0?'none':'flex';
+  document.getElementById('prevBtn').style.alignItems='center';
+  document.getElementById('prevBtn').style.justifyContent='center';
+  document.getElementById('nextBtn').textContent=nextLabels[n];
+  if(!globalRunning){
+    globalSecs=chapterTimes[n];
+    const m=Math.floor(globalSecs/60).toString().padStart(2,'0');
+    document.getElementById('globalTimer').textContent=m+':00';
+  }
+}
+function nextChapter(){
+  if(currentChapter<3) goChapter(currentChapter+1,null);
+  else window.location.href='index.html';
+}
+function prevChapter(){ if(currentChapter>0) goChapter(currentChapter-1,null); }
+function toggleBlock(h){ h.closest('.block').classList.toggle('open'); }
+
+// GLOBAL TIMER
+let globalSecs=25*60, globalRunning=false, globalInterval=null;
+function toggleGlobalTimer(){
+  if(globalRunning){clearInterval(globalInterval);globalRunning=false;document.getElementById('globalTimer').classList.remove('running');}
+  else{
+    globalRunning=true;document.getElementById('globalTimer').classList.add('running');
+    globalInterval=setInterval(()=>{
+      if(globalSecs<=0){clearInterval(globalInterval);globalRunning=false;return;}
+      globalSecs--;
+      const m=Math.floor(globalSecs/60).toString().padStart(2,'0');
+      const s=(globalSecs%60).toString().padStart(2,'0');
+      document.getElementById('globalTimer').textContent=m+':'+s;
+    },1000);
+  }
+}
+
+// TEXTURE SELECTOR
+const textureInfo = [
+  {label:'Rainbow — K♠7♥2♦', text:'Board le plus sec possible. Aucun flush draw, peu de straight draws. Mise petite (25–40%). C-bet très fréquent ici. Favorise les mains faites sur les draws.'},
+  {label:'Two-tone — J♥T♥9♠', text:'Un flush draw est possible (deux cœurs). Board aussi très connecté → straight draws partout. Mise grande (60–80%). Très dangereux pour les mains faites — protège-toi.'},
+  {label:'Monotone — A♥8♥3♥', text:'Trois cœurs = flush possible dès le flop ! Situation très spéciale. Quiconque a deux cœurs a un flush ou un draw. Boardement dangereux, souvent préférable de check avec des mains moyennes.'},
+  {label:'Connecté — 8♠7♥6♦', text:'Board très connecté = nombreux straight draws. Même sans flush draw, ce board est très drawant. Mise grande pour protéger. Les mains type top pair sont vulnérables.'},
+];
+function selectTexture(n){
+  document.querySelectorAll('.texture-card').forEach((c,i)=>{c.classList.toggle('active',i===n);});
+  const el=document.getElementById('textureInfo');
+  el.querySelector('.info-label').textContent=textureInfo[n].label;
+  el.querySelector('p').textContent=textureInfo[n].text;
+}
+
+// BOARD ANALYZER
+const boardAnalyses = {
+  'K72r':{
+    cards:[{t:'K♠',c:'s'},{t:'7♦',c:'d'},{t:'2♣',c:'c'}],
+    title:'K♠7♦2♣ — Board sec, rainbow',
+    text:'<strong>Texture :</strong> Sec · Rainbow · Peu connecté<br><strong>Flush draw :</strong> Impossible<br><strong>Straight draw :</strong> Très limité (A3-A4, 65)<br><strong>Stratégie :</strong> Mise petite (25–40%). C-bet très fréquent. Favorise les mains hautes.<br><strong>Range adv :</strong> UTG/EP favorisé (beaucoup de K dans sa range).'
+  },
+  'JT9tt':{
+    cards:[{t:'J♥',c:'h'},{t:'T♥',c:'h'},{t:'9♠',c:'s'}],
+    title:'J♥T♥9♠ — Board très drawant, two-tone',
+    text:'<strong>Texture :</strong> Drawant · Two-tone · Très connecté<br><strong>Flush draw :</strong> Oui (tirage cœur)<br><strong>Straight draw :</strong> Partout (Q, 8, QK, 87...)<br><strong>Stratégie :</strong> Mise grande (70–100%). Protège tes mains faites agressivement.<br><strong>Range adv :</strong> Neutre à légèrement BB (plus de SC en défense).'
+  },
+  'A85r':{
+    cards:[{t:'A♠',c:'s'},{t:'8♦',c:'d'},{t:'5♣',c:'c'}],
+    title:'A♠8♦5♣ — Board moyen, légèrement connecté',
+    text:'<strong>Texture :</strong> Moyen · Rainbow · Semi-connecté<br><strong>Flush draw :</strong> Impossible<br><strong>Straight draw :</strong> 67, 64, 76 (gutshots surtout)<br><strong>Stratégie :</strong> Mise standard (40–60%). C-bet fréquent avec l\'As dans ta range.<br><strong>Range adv :</strong> EP/UTG favorisé (beaucoup de A dans sa range).'
+  },
+  '987tt':{
+    cards:[{t:'9♥',c:'h'},{t:'8♥',c:'h'},{t:'7♠',c:'s'}],
+    title:'9♥8♥7♠ — Board extrêmement drawant',
+    text:'<strong>Texture :</strong> Très drawant · Two-tone · Très connecté<br><strong>Flush draw :</strong> Oui (tirage cœur)<br><strong>Straight draw :</strong> T6, JT, 65, T6J (open-ended partout)<br><strong>Stratégie :</strong> Mise très grande (75–100%) ou check. Mains faites très vulnérables.<br><strong>Range adv :</strong> BB fortement favorisé (joue toutes les SC basses).'
+  },
+  'QQ2r':{
+    cards:[{t:'Q♠',c:'s'},{t:'Q♦',c:'d'},{t:'2♣',c:'c'}],
+    title:'Q♠Q♦2♣ — Board pairé, sec',
+    text:'<strong>Texture :</strong> Pairé · Rainbow · Très sec<br><strong>Flush draw :</strong> Impossible<br><strong>Straight draw :</strong> Quasi impossible<br><strong>Stratégie :</strong> Board très spécial. Qui a QQ ou Q dans sa range domine. Beaucoup de check-check. Bluff très efficace car les deux ranges ont peu de mains fortes.<br><strong>Range adv :</strong> EP légèrement favorisé (plus de Q dans sa range).'
+  },
+  'AKQtt':{
+    cards:[{t:'A♠',c:'s'},{t:'K♠',c:'s'},{t:'Q♥',c:'h'}],
+    title:'A♠K♠Q♥ — Board très high, two-tone',
+    text:'<strong>Texture :</strong> Très high · Two-tone · Semi-connecté<br><strong>Flush draw :</strong> Oui (tirage pique)<br><strong>Straight draw :</strong> JT complète (gutshot pour les deux)<br><strong>Stratégie :</strong> Board qui favorise massivement EP/UTG (beaucoup de AK, AQ, KQ). Mise standard à grande.<br><strong>Range adv :</strong> EP/UTG très fortement favorisé.'
+  },
+};
+function analyzeBoard(key,btn){
+  document.querySelectorAll('.board-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const d=boardAnalyses[key];
+  document.getElementById('analyzerBoard').innerHTML=d.cards.map(c=>`<div class="bcard ${c.c}">${c.t}</div>`).join('');
+  document.getElementById('arTitle').textContent=d.title;
+  document.getElementById('arText').innerHTML=d.text;
+}
+
+// OUTS CALCULATOR
+const drawData=[
+  {name:'FLUSH DRAW',outs:9,advice:'Flush draw = draw très fort. Semi-bluffer au flop est souvent correct. 36% de chance de compléter avec 2 cartes à venir.'},
+  {name:'OPEN-ENDED STRAIGHT DRAW',outs:8,advice:'OESD = très puissant. 32% de compléter au flop. Justifie un semi-bluff agressif. Attention aux flush draws adverses.'},
+  {name:'COMBO DRAW',outs:15,advice:'Combo draw = main quasi-faite. ~60% de compléter au flop. Souvent favori même contre top pair. Joue très agressivement.'},
+  {name:'GUTSHOT STRAIGHT DRAW',outs:4,advice:'Gutshot = draw faible. 16% au flop. Rarement assez fort pour semi-bluffer. Appeler seulement avec de très bonnes implied odds.'},
+  {name:'OVERCARDS',outs:6,advice:'Overcards = peu fiable. 24% au flop. Ces outs donnent seulement une paire — peut-être pas la meilleure. Semi-bluff possible mais risqué.'},
+  {name:'SET MINING',outs:2,advice:'Chercher un set = 8% au flop. Besoin d\'implied odds massives (15x+). Ne pas bluffer avec ça — joue pour la valeur quand tu touches.'},
+];
+function selectDraw(n){
+  document.querySelectorAll('.draw-btn').forEach((b,i)=>b.classList.toggle('selected',i===n));
+  const d=drawData[n];
+  document.getElementById('outsNum').textContent=d.outs;
+  document.getElementById('outsLabel').textContent='OUTS — '+d.name;
+  document.getElementById('floatPct').textContent=(d.outs*4)+'%';
+  document.getElementById('turnPct').textContent=(d.outs*2)+'%';
+  document.getElementById('drawAdvice').textContent=d.advice;
+}
+
+// REVISION TIMER
+let rtSecs=15*60,rtRunning=false,rtInterval=null;
+function toggleRevisionTimer(){
+  if(rtRunning){clearInterval(rtInterval);rtRunning=false;document.getElementById('rtBtn').textContent='▶ Reprendre';}
+  else{
+    rtRunning=true;document.getElementById('rtBtn').textContent='⏸ Pause';
+    rtInterval=setInterval(()=>{
+      if(rtSecs<=0){clearInterval(rtInterval);rtRunning=false;document.getElementById('rtDisplay').textContent='✓ FINI';document.getElementById('rtBtn').textContent='✓ Complété';return;}
+      rtSecs--;
+      document.getElementById('rtDisplay').textContent=Math.floor(rtSecs/60).toString().padStart(2,'0')+':'+((rtSecs%60).toString().padStart(2,'0'));
+      document.getElementById('rtFill').style.width=((15*60-rtSecs)/(15*60)*100)+'%';
+    },1000);
+  }
+}
+function resetRevisionTimer(){
+  clearInterval(rtInterval);rtRunning=false;rtSecs=15*60;
+  document.getElementById('rtDisplay').textContent='15:00';
+  document.getElementById('rtFill').style.width='0%';
+  document.getElementById('rtBtn').textContent='▶ Démarrer';
+}
+
+// CHECKLIST
+function toggleCheck(el){
+  el.classList.toggle('done');
+  el.querySelector('.check-box2').textContent=el.classList.contains('done')?'✓':'';
+}
+
+// QUIZ
+let quizAnswers={};
+function revealQuiz(i,btn){
+  document.getElementById('qa-'+i).style.display='block';
+  btn.style.display='none';
+  document.getElementById('qr-'+i).classList.add('show');
+}
+function rateQuiz(i,result){
+  quizAnswers[i]=result;
+  document.getElementById('qi-'+i).classList.remove('correct','wrong');
+  document.getElementById('qi-'+i).classList.add(result);
+  const correct=Object.values(quizAnswers).filter(v=>v==='correct').length;
+  document.getElementById('quizScore').textContent=correct+'/'+Math.max(Object.keys(quizAnswers).length,5);
+  document.getElementById('scoreFill').style.width=(correct/5*100)+'%';
+}
+</script>
+
+</body>
+</html>
