@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Session 04 — Le bluff et la semi-bluff</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0910;--bg2:#111020;--surface:#16152a;--surface2:#1d1c35;--border:#252440;--gold:#d4a843;--red:#e84545;--teal:#3ecfca;--green:#4ecf7a;--text:#e8e6f5;--text-dim:#9896b8;--text-muted:#4a4868;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
+#app{height:100dvh;display:flex;flex-direction:column;}
+.header{padding:calc(var(--safe-top) + 12px) 16px 12px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:20;}
+.back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;text-decoration:none;}
+.header-info{flex:1;min-width:0;}
+.header-title{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-sub{font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:1px;}
+.timer-pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);cursor:pointer;flex-shrink:0;}
+.timer-pill.running{border-color:rgba(212,168,67,0.4);background:rgba(212,168,67,0.08);}
+.chapter-nav{display:flex;overflow-x:auto;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none;}
+.chapter-nav::-webkit-scrollbar{display:none;}
+.chapter-btn{flex-shrink:0;padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.chapter-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.progress-bar{height:2px;background:var(--border);flex-shrink:0;}
+.progress-fill{height:100%;background:var(--gold);transition:width 0.5s ease;}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.chapter{display:none;padding:20px 16px 40px;}
+.chapter.active{display:block;}
+.section-tag{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.chapter-hero{background:linear-gradient(135deg,var(--surface) 0%,var(--bg2) 100%);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;}
+.chapter-hero::after{content:attr(data-icon);position:absolute;right:14px;bottom:-8px;font-size:72px;opacity:0.06;line-height:1;}
+.chapter-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.2;}
+.chapter-desc{font-size:14px;color:var(--text-dim);font-style:italic;line-height:1.6;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.chip{font-size:11px;font-family:'DM Mono',monospace;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);}
+.block{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.block-header{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;}
+.block-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.bi-red{background:rgba(232,69,69,0.12);}
+.bi-gold{background:rgba(212,168,67,0.12);}
+.bi-teal{background:rgba(62,207,202,0.12);}
+.bi-green{background:rgba(78,207,122,0.12);}
+.bi-muted{background:var(--surface2);}
+.block-title{font-size:15px;font-weight:500;color:var(--text);flex:1;}
+.block-arrow{color:var(--text-muted);font-size:14px;transition:transform 0.25s;flex-shrink:0;}
+.block.open .block-arrow{transform:rotate(90deg);}
+.block-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
+.block.open .block-body{display:block;}
+.block-body p{font-size:14px;color:var(--text-dim);line-height:1.75;margin-top:12px;}
+.block-body strong{color:var(--text);}
+.info-box{border-radius:10px;padding:14px;margin-top:14px;}
+.info-box.teal{background:rgba(62,207,202,0.06);border:1px solid rgba(62,207,202,0.2);}
+.info-box.gold{background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.2);}
+.info-box.red{background:rgba(232,69,69,0.06);border:1px solid rgba(232,69,69,0.2);}
+.info-box.green{background:rgba(78,207,122,0.06);border:1px solid rgba(78,207,122,0.2);}
+.info-label{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.info-box.teal .info-label{color:var(--teal);}
+.info-box.gold .info-label{color:var(--gold);}
+.info-box.red .info-label{color:var(--red);}
+.info-box.green .info-label{color:var(--green);}
+.info-box p{margin-top:0!important;font-style:italic;}
+.info-box.gold p{color:#d4b96a;}
+.info-box.teal p{color:#a0ede9;}
+.info-box.red p{color:#f0a0a0;}
+.info-box.green p{color:#a0e8bc;}
+ul.content-list{list-style:none;padding:0;margin-top:10px;}
+ul.content-list li{font-size:14px;color:var(--text-dim);padding:8px 0;border-bottom:1px solid var(--border);line-height:1.5;display:flex;gap:8px;}
+ul.content-list li:last-child{border-bottom:none;}
+ul.content-list li::before{content:'→';color:var(--gold);flex-shrink:0;}
+
+/* BLUFF SIMULATOR */
+.bluff-scenario{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.bluff-board{display:flex;gap:6px;margin:10px 0;}
+.bc{font-family:‘DM Mono’,monospace;font-size:15px;font-weight:700;padding:8px 10px;border-radius:8px;background:var(–surface);}
+.bc.s{color:#a0cfff;} .bc.h{color:#ff7070;} .bc.d{color:#ff9f70;} .bc.c{color:#70e070;}
+.bluff-choices{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.bluff-btn{background:rgba(255,255,255,0.03);border:1px solid var(–border);border-radius:10px;padding:12px 14px;text-align:left;font-family:‘DM Sans’,sans-serif;font-size:14px;color:var(–text);cursor:pointer;transition:all 0.2s;}
+.bluff-btn.correct{background:rgba(78,207,122,0.1);border-color:rgba(78,207,122,0.4);color:var(–green);}
+.bluff-btn.wrong{background:rgba(232,69,69,0.1);border-color:rgba(232,69,69,0.4);color:var(–red);}
+.bluff-expl{display:none;background:#0d1f0d;border:1px solid rgba(78,207,122,0.2);border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#a0e8bc;line-height:1.65;}
+
+/* FOLD EQUITY CALC */
+.fe-calc{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-top:14px;}
+.fe-title{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+.fe-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.fe-label{font-size:13px;color:var(–text-dim);font-family:‘DM Mono’,monospace;}
+.fe-val{font-family:‘Playfair Display’,serif;font-size:22px;font-weight:700;color:var(–gold);}
+.fe-result{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px;margin-top:12px;}
+.fe-verdict{font-size:15px;font-weight:600;margin-bottom:6px;}
+.fe-explain{font-size:13px;color:var(–text-dim);line-height:1.6;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:16px 0;border-radius:10px;border:1px solid var(–border);}
+table{width:100%;border-collapse:collapse;}
+th{background:var(–surface2);color:var(–text-muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 12px;text-align:left;font-family:‘DM Mono’,monospace;}
+td{padding:10px 12px;border-top:1px solid var(–border);font-size:13px;color:var(–text-dim);vertical-align:top;}
+.td-gold{color:var(–gold);font-family:‘DM Mono’,monospace;font-weight:600;}
+.td-teal{color:var(–teal);}
+.td-red{color:var(–red);}
+
+/* REVISION */
+.revision-timer{background:linear-gradient(135deg,var(–surface),var(–bg2));border:1px solid var(–border);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;}
+.rt-display{font-family:‘Playfair Display’,serif;font-size:52px;font-weight:900;color:var(–gold);line-height:1;margin:8px 0;}
+.rt-label{font-family:‘DM Mono’,monospace;font-size:10px;letter-spacing:3px;color:var(–text-muted);text-transform:uppercase;}
+.rt-progress{height:3px;background:var(–border);border-radius:2px;margin:14px 0;}
+.rt-fill{height:100%;background:var(–gold);border-radius:2px;transition:width 1s linear;}
+.rt-btns{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+.rt-start{background:var(–gold);border:none;border-radius:10px;color:var(–bg);font-family:‘DM Mono’,monospace;font-size:13px;font-weight:500;padding:12px 28px;cursor:pointer;}
+.rt-reset{background:var(–surface);border:1px solid var(–border);border-radius:10px;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:13px;padding:12px 20px;cursor:pointer;}
+.score-block{background:var(–surface);border:1px solid var(–border);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;}
+.score-val{font-family:‘Playfair Display’,serif;font-size:44px;font-weight:900;color:var(–gold);}
+.score-lbl{font-family:‘DM Mono’,monospace;font-size:11px;color:var(–text-muted);letter-spacing:2px;margin-top:4px;text-transform:uppercase;}
+.score-bar{height:4px;background:var(–border);border-radius:2px;margin:14px 0;}
+.score-fill{height:100%;background:var(–gold);border-radius:2px;transition:width 0.5s;}
+.check-item{display:flex;align-items:flex-start;gap:12px;background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px 16px;margin-bottom:8px;cursor:pointer;}
+.check-item.done{border-color:rgba(78,207,122,0.3);background:rgba(78,207,122,0.04);}
+.check-box2{width:22px;height:22px;border-radius:6px;border:2px solid var(–border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:1px;}
+.check-item.done .check-box2{background:rgba(78,207,122,0.2);border-color:var(–green);color:var(–green);}
+.check-text{font-size:14px;color:var(–text-dim);line-height:1.5;flex:1;}
+.check-item.done .check-text{color:var(–text-muted);text-decoration:line-through;}
+.quiz-item{background:var(–surface);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.quiz-num{font-size:10px;font-family:‘DM Mono’,monospace;color:var(–text-muted);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;}
+.quiz-q{font-size:15px;color:var(–text);font-style:italic;margin-bottom:12px;line-height:1.5;}
+.quiz-reveal{width:100%;background:transparent;border:1px solid var(–border);border-radius:8px;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px;cursor:pointer;}
+.quiz-ans{display:none;background:#0d1f0d;border:1px solid rgba(78,207,122,0.2);border-radius:8px;padding:12px;margin-top:10px;font-size:13px;color:#7dde7d;line-height:1.6;}
+.quiz-rate{display:none;gap:8px;margin-top:10px;}
+.quiz-rate.show{display:flex;}
+.quiz-correct{flex:1;background:rgba(62,207,202,0.1);border:1px solid rgba(62,207,202,0.3);color:var(–teal);border-radius:8px;padding:9px;font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;}
+.quiz-wrong{flex:1;background:rgba(232,69,69,0.1);border:1px solid rgba(232,69,69,0.3);color:var(–red);border-radius:8px;padding:9px;font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;}
+.quiz-item.correct{border-color:rgba(62,207,202,0.3);}
+.quiz-item.wrong{border-color:rgba(232,69,69,0.3);}
+.bottom-nav{padding-bottom:calc(var(–safe-bottom) + 4px);background:rgba(10,9,16,0.97);border-top:1px solid var(–border);display:flex;flex-shrink:0;backdrop-filter:blur(20px);}
+.next-chapter-btn{flex:1;padding:12px;background:var(–gold);border:none;color:var(–bg);font-family:‘DM Mono’,monospace;font-size:13px;font-weight:500;letter-spacing:1px;cursor:pointer;}
+.prev-chapter-btn{width:56px;padding:12px;background:var(–surface);border:none;border-right:1px solid var(–border);color:var(–text-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+<div class="header">
+  <a class="back-btn" href="index.html">‹</a>
+  <div class="header-info">
+    <div class="header-title">Session 04 — Le bluff</div>
+    <div class="header-sub" id="chapterLabel">CHAPITRE 1/4 · BLUFF PUR</div>
+  </div>
+  <div class="timer-pill" id="globalTimer" onclick="toggleGlobalTimer()">25:00</div>
+</div>
+
+<div class="chapter-nav">
+  <button class="chapter-btn active" onclick="goChapter(0,this)">① Bluff pur</button>
+  <button class="chapter-btn" onclick="goChapter(1,this)">② Semi-bluff</button>
+  <button class="chapter-btn" onclick="goChapter(2,this)">③ Fréquence</button>
+  <button class="chapter-btn" onclick="goChapter(3,this)">④ Révision</button>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:12%"></div></div>
+
+<div class="scroll-area">
+
+<!-- ═══════════════════════════════
+     CHAPITRE 1 — BLUFF PUR (25 min)
+═══════════════════════════════ -->
+
+<div class="chapter active" id="ch-0">
+  <div class="chapter-hero" data-icon="🎭">
+    <div class="section-tag">① Le bluff pur · 25 min</div>
+    <div class="chapter-title">Bluffer pour gagner sans la meilleure main</div>
+    <div class="chapter-desc">Le bluff est l'une des actions les plus incomprises au poker. Ce n'est pas du hasard — c'est une décision mathématique et psychologique précise.</div>
+    <div class="chips">
+      <span class="chip">⏱ 25 min</span>
+      <span class="chip">🎭 Fold equity</span>
+      <span class="chip">📊 Fréquence de bluff</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">🎭</div>
+      <div class="block-title">Qu'est-ce qu'un bluff pur ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Un <strong>bluff pur</strong> (ou "stone cold bluff") consiste à miser ou relancer avec une main qui n'a <em>aucune</em> chance de gagner au showdown. L'unique objectif : faire folder l'adversaire.</p>
+      <ul class="content-list">
+        <li><strong>Quand ça marche :</strong> l'adversaire a une main marginale qu'il peut folder face à une pression suffisante</li>
+        <li><strong>Quand ça échoue :</strong> l'adversaire a une main forte qu'il ne peut pas folder, ou il est un calling station</li>
+        <li><strong>Condition nécessaire :</strong> ton bluff doit être crédible — il doit représenter une main que tu pourrais logiquement avoir</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 Règle fondamentale</div>
+        <p>Un bluff n'est profitable que si l'adversaire folde suffisamment souvent pour couvrir tes pertes quand il appelle. Ce n'est pas de l'intuition — c'est des maths.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">📊</div>
+      <div class="block-title">La math du bluff — Quand est-ce profitable ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Pour qu'un bluff soit profitable, l'adversaire doit folder assez souvent. Voici la formule simple :</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Taille du bluff</th><th>Fold requis</th><th>Exemple</th></tr></thead>
+          <tbody>
+            <tr><td class="td-gold">33% du pot</td><td class="td-teal">25%</td><td>Pot 100, bluff 33 → fold 25% = profitable</td></tr>
+            <tr><td class="td-gold">50% du pot</td><td class="td-teal">33%</td><td>Pot 100, bluff 50 → fold 33% = profitable</td></tr>
+            <tr><td class="td-gold">75% du pot</td><td class="td-teal">43%</td><td>Pot 100, bluff 75 → fold 43% = profitable</td></tr>
+            <tr><td class="td-gold">100% du pot</td><td class="td-teal">50%</td><td>Pot 100, bluff 100 → fold 50% = profitable</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box teal">
+        <div class="info-label">💡 Formule</div>
+        <p>% fold requis = Mise / (Pot + Mise). Si l'adversaire folde plus souvent que ce %, le bluff est mathématiquement profitable.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOLD EQUITY CALCULATOR -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">🧮</div>
+      <div class="block-title">Calculateur — Mon bluff est-il profitable ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Ajuste les valeurs pour voir si ton bluff est mathématiquement profitable.</p>
+      <div class="fe-calc">
+        <div class="fe-title">Paramètres du bluff</div>
+        <div class="fe-row">
+          <span class="fe-label">Taille du pot</span>
+          <span class="fe-val" id="fePot">100 BB</span>
+        </div>
+        <input type="range" min="10" max="300" value="100" oninput="updateFE('pot',this.value)" style="width:100%;accent-color:#d4a843;margin-bottom:14px;">
+        <div class="fe-row">
+          <span class="fe-label">Taille du bluff</span>
+          <span class="fe-val" id="feBluff" style="color:var(--teal)">50 BB</span>
+        </div>
+        <input type="range" min="5" max="300" value="50" oninput="updateFE('bluff',this.value)" style="width:100%;accent-color:#3ecfca;margin-bottom:14px;">
+        <div class="fe-row">
+          <span class="fe-label">Fold estimé adverse</span>
+          <span class="fe-val" id="feFold" style="color:var(--red)">40%</span>
+        </div>
+        <input type="range" min="0" max="100" value="40" oninput="updateFE('fold',this.value)" style="width:100%;accent-color:#e84545;margin-bottom:14px;">
+        <div class="fe-result" id="feResult">
+          <div class="fe-verdict" style="color:var(--green);">✅ Bluff PROFITABLE</div>
+          <div class="fe-explain">Fold requis : 33%. Fold estimé : 40%. Ton bluff rapporte en moyenne +X BB.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">✅</div>
+      <div class="block-title">Les meilleurs spots pour bluffer</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li><strong>Heads-up (1 vs 1) :</strong> beaucoup plus facile de bluffer que multi-way. Avec plusieurs adversaires, la probabilité qu'au moins un ait une bonne main augmente.</li>
+        <li><strong>Board favorable à ta range :</strong> si le board représente bien les mains de ta range (ex : As sur un board A-high si tu viens d'UTG), ton bluff est crédible.</li>
+        <li><strong>Adversaire capable de folder :</strong> bluffer une calling station = jeter de l'argent. Bluffer un joueur TAG = peut fonctionner.</li>
+        <li><strong>Position :</strong> bluffer en position (dernier à agir) est bien plus facile — tu as plus d'informations sur la force adverse.</li>
+        <li><strong>River bluff :</strong> à la river, un bluff représente une main complète. Si le board a un tirage complété, tu peux représenter ce draw.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">❌</div>
+      <div class="block-title">Les mauvais spots pour bluffer</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li><strong>Multi-way (3+ joueurs) :</strong> trop de chances qu'au moins un appelle. Fold equity très faible.</li>
+        <li><strong>Contre les calling stations :</strong> ces joueurs appellent avec n'importe quoi — le bluff perd toute sa valeur.</li>
+        <li><strong>Avec des cotes irrésistibles :</strong> si le pot est énorme par rapport à la mise, l'adversaire a de trop bonnes cotes pour folder.</li>
+        <li><strong>Bluff de desperation :</strong> bluffer parce qu'on a perdu les mains précédentes et qu'on veut récupérer — c'est émotionnel, pas stratégique.</li>
+        <li><strong>Quand tu n'as aucune crédibilité :</strong> si tu as montré beaucoup de bluffs récemment, l'adversaire aura moins tendance à folder.</li>
+      </ul>
+      <div class="info-box red">
+        <div class="info-label">⚠️ Erreur fréquente</div>
+        <p>Bluffer parce qu'on "sent" que l'adversaire est faible, sans analyse de sa range ou du board. Le bluff doit être basé sur des données, pas des feelings.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CHAPITRE 2 — SEMI-BLUFF (30 min)
+═══════════════════════════════════════ -->
+
+<div class="chapter" id="ch-1">
+  <div class="chapter-hero" data-icon="⚡">
+    <div class="section-tag">② Le semi-bluff · 30 min</div>
+    <div class="chapter-title">Bluffer avec un plan B</div>
+    <div class="chapter-desc">Le semi-bluff est l'arme la plus puissante du poker. Tu mises avec un draw — si l'adversaire fold, tu gagnes. Si il appelle, tu peux encore compléter ta main.</div>
+    <div class="chips">
+      <span class="chip">⏱ 30 min</span>
+      <span class="chip">⚡ Draw + Bluff</span>
+      <span class="chip">🎯 Double équité</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">⚡</div>
+      <div class="block-title">Qu'est-ce que le semi-bluff ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Le <strong>semi-bluff</strong> consiste à miser avec une main qui n'est pas encore la meilleure, mais qui a le potentiel de le devenir. Tu gagnes de <strong>deux façons</strong> :</p>
+      <ul class="content-list">
+        <li><strong>Way 1 — Fold equity :</strong> l'adversaire fold et tu remportes le pot immédiatement</li>
+        <li><strong>Way 2 — Equity direct :</strong> l'adversaire appelle mais tu complètes ton draw au turn ou à la river</li>
+      </ul>
+      <p>C'est pourquoi le semi-bluff est supérieur au bluff pur : même quand il échoue immédiatement, tu as encore une chance de gagner la main.</p>
+      <div class="info-box teal">
+        <div class="info-label">💡 Exemple parfait</div>
+        <p>Tu as 8♥9♥ sur un flop J♥T♦3♠. Tu as un open-ended straight draw (8 outs ≈ 32%). Tu bets 60% du pot. L'adversaire fold → tu gagnes. Il appelle → tu as encore 32% de gagner.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🏆</div>
+      <div class="block-title">Pourquoi le semi-bluff est supérieur au bluff pur</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Comparons un bluff pur vs un semi-bluff dans la même situation :</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Type</th><th>Si fold</th><th>Si call</th><th>EV globale</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="td-gold">Bluff pur</td>
+              <td class="td-teal">+Pot</td>
+              <td class="td-red">−Mise (0% de gagner)</td>
+              <td>Dépend du fold%</td>
+            </tr>
+            <tr>
+              <td class="td-gold">Semi-bluff</td>
+              <td class="td-teal">+Pot</td>
+              <td class="td-teal">~30% de gagner encore</td>
+              <td>Toujours meilleur</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box gold">
+        <div class="info-label">Conclusion</div>
+        <p>Le semi-bluff avec un flush draw (9 outs) ou un OESD (8 outs) est presque toujours correct. Avec un gutshot (4 outs), soyez plus sélectif.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEMI-BLUFF SCENARIOS -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">🎮</div>
+      <div class="block-title">Simulateur — Semi-bluff ou pas ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Analyse chaque situation et décide si tu semi-bluffes.</p>
+
+```
+  <div class="bluff-scenario">
+    <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:1px;margin-bottom:6px;">Scénario 1 — Tu as 7♥8♥. Flop : 9♠T♦J♣. Pot = 20BB. L'adversaire check.</div>
+    <div class="bluff-board">
+      <span class="bc s">9♠</span><span class="bc d">T♦</span><span class="bc c">J♣</span>
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Tu as un open-ended straight draw. Board sec. Que fais-tu ?</div>
+    <div class="bluff-choices">
+      <button class="bluff-btn" onclick="bluffAnswer(0,0,this)">Check (voir le turn gratuitement)</button>
+      <button class="bluff-btn" onclick="bluffAnswer(0,1,this)">Bet 10BB (50% pot) — semi-bluff</button>
+      <button class="bluff-btn" onclick="bluffAnswer(0,2,this)">Bet 18BB (90% pot) — grosse pression</button>
+    </div>
+    <div class="bluff-expl" id="bluff-expl-0">✅ Bet 50% est excellent ici. Tu as un OESD (8 outs ≈ 32%) sur un board sec rainbow. Semi-bluffer avec 50% pot maximise ta fold equity tout en restant rentable si tu es callé. Un check n'est pas mauvais mais tu laisses de l'argent sur la table. Grosse mise risque de faire folder des mains qui auraient payé le turn avec un bluff plus petit.</div>
+  </div>
+
+  <div class="bluff-scenario" style="margin-top:12px;">
+    <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:1px;margin-bottom:6px;">Scénario 2 — Tu as A♥5♥. Flop : K♥8♥2♦. Pot = 15BB. 2 adversaires checkent.</div>
+    <div class="bluff-board">
+      <span class="bc h">K♥</span><span class="bc h">8♥</span><span class="bc d">2♦</span>
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Tu as un nut flush draw. Multi-way (2 adversaires). Que fais-tu ?</div>
+    <div class="bluff-choices">
+      <button class="bluff-btn" onclick="bluffAnswer(1,0,this)">Check (multi-way = dangereux)</button>
+      <button class="bluff-btn" onclick="bluffAnswer(1,1,this)">Bet 8BB (53%) — semi-bluff malgré multi-way</button>
+      <button class="bluff-btn" onclick="bluffAnswer(1,2,this)">Bet 15BB (100%) — maximum pression</button>
+    </div>
+    <div class="bluff-expl" id="bluff-expl-1">✅ Check est défendable, mais bet 53% est aussi correct ici ! Tu as le NUT flush draw (As de cœur = meilleure couleur possible). Même multi-way, c'est un semi-bluff très fort car : (1) tu peux gagner si les deux fold, (2) tu as 9 outs "propres" si tu es callé. Attention : si quelqu'un raise, tu dois évaluer si c'est le bon prix pour continuer.</div>
+  </div>
+
+  <div class="bluff-scenario" style="margin-top:12px;">
+    <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:1px;margin-bottom:6px;">Scénario 3 — Tu as Q♦J♦. Flop : A♠5♥2♣. Pot = 18BB. L'adversaire bet 12BB.</div>
+    <div class="bluff-board">
+      <span class="bc s">A♠</span><span class="bc h">5♥</span><span class="bc c">2♣</span>
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:8px;">Tu n'as rien, pas de draw. L'adversaire bet. Que fais-tu ?</div>
+    <div class="bluff-choices">
+      <button class="bluff-btn" onclick="bluffAnswer(2,0,this)">Fold (pas de draw, pas de valeur)</button>
+      <button class="bluff-btn" onclick="bluffAnswer(2,1,this)">Call (espérer une Q ou J au turn)</button>
+      <button class="bluff-btn" onclick="bluffAnswer(2,2,this)">Raise — bluff pur pour représenter l'As</button>
+    </div>
+    <div class="bluff-expl" id="bluff-expl-2">✅ Fold est la meilleure décision. QJo sur A52 rainbow : aucun draw, aucune valeur. Les overcards (Q et J) donnent 6 outs (~24%) mais ne font que des paires moyennes — pas suffisant pour justifier un call ou raise face à une mise de 67% du pot. Ce n'est pas un semi-bluff — c'est juste un bluff pur risqué. La discipline = folder ici.</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">📋</div>
+      <div class="block-title">Les meilleurs draws pour semi-bluffer</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li><strong>Combo draw (15 outs) :</strong> Le meilleur. Flush draw + straight draw simultanément. Semi-bluff quasi systématique — tu es souvent favori même face à une paire.</li>
+        <li><strong>Nut flush draw (9 outs) :</strong> Excellent. Le fait d'avoir l'As de la couleur évite les "dirty outs". Semi-bluff fréquent.</li>
+        <li><strong>Open-ended straight draw (8 outs) :</strong> Très bon. Semi-bluff en position ou face à un check. Attention sur boards monotones.</li>
+        <li><strong>Flush draw standard (9 outs) :</strong> Bon mais attention si quelqu'un peut avoir le nut flush draw (As de la couleur).</li>
+        <li><strong>Gutshot (4 outs) :</strong> Faible. Semi-bluffer seulement avec d'autres facteurs favorables (bonne position, adversaire capable de folder).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CHAPITRE 3 — FRÉQUENCE ET ÉQUILIBRE (25 min)
+═══════════════════════════════════════ -->
+
+<div class="chapter" id="ch-2">
+  <div class="chapter-hero" data-icon="⚖️">
+    <div class="section-tag">③ Fréquence et équilibre · 25 min</div>
+    <div class="chapter-title">Bluffer ni trop, ni trop peu</div>
+    <div class="chapter-desc">La clé n'est pas de bluffer souvent ou rarement — c'est de bluffer avec la bonne fréquence pour rester inexploitable.</div>
+    <div class="chips">
+      <span class="chip">⏱ 25 min</span>
+      <span class="chip">⚖️ Équilibre</span>
+      <span class="chip">🎯 Image de table</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">⚖️</div>
+      <div class="block-title">Le ratio value / bluff optimal</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Pour être inexploitable, tes mises doivent contenir un mélange équilibré de mains de value et de bluffs. Ce ratio dépend de la taille de ta mise.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Taille mise</th><th>Ratio value:bluff</th><th>Exemple river</th></tr></thead>
+          <tbody>
+            <tr><td class="td-gold">33% pot</td><td class="td-teal">1 bluff : 2 value</td><td>2 bluffs pour 4 value bets</td></tr>
+            <tr><td class="td-gold">50% pot</td><td class="td-teal">1 bluff : 2 value</td><td>2 bluffs pour 4 value bets</td></tr>
+            <tr><td class="td-gold">75% pot</td><td class="td-teal">2 bluffs : 3 value</td><td>4 bluffs pour 6 value bets</td></tr>
+            <tr><td class="td-gold">100% pot</td><td class="td-teal">1 bluff : 1 value</td><td>5 bluffs pour 5 value bets</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box gold">
+        <div class="info-label">💡 Pourquoi ce ratio ?</div>
+        <p>Si tu bluffes trop, l'adversaire apprend à toujours appeler et tu perds de l'argent. Si tu bluffes trop peu, il apprend à toujours folder et tu ne gagnes que de petits pots. Le bon ratio le rend indifférent entre call et fold.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🎭</div>
+      <div class="block-title">L'image de table — Comment tu es perçu</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Ton image à la table influence directement la profitabilité de tes bluffs. Ce que les adversaires pensent de toi change ce qu'ils font face à tes mises.</p>
+      <ul class="content-list">
+        <li><strong>Image tight (serré) :</strong> les adversaires pensent que tu joues peu et seulement de bonnes mains → tes bluffs sont plus crédibles → bluffer est plus profitable</li>
+        <li><strong>Image loose (large) :</strong> tu as montré beaucoup de mains différentes → les adversaires te croient moins → bluffer est moins profitable mais value bet est plus payé</li>
+        <li><strong>Après avoir montré un bluff :</strong> les adversaires vont te payer plus souvent → exploite ça en jouant plus de value. Ne pas essayer de re-bluffer immédiatement.</li>
+        <li><strong>Après plusieurs value bets gagnés :</strong> les adversaires pensent que tu joues always value → c'est le moment parfait pour un bluff bien choisi.</li>
+      </ul>
+      <div class="info-box teal">
+        <div class="info-label">💡 Stratégie avancée</div>
+        <p>Les meilleurs joueurs alternent intentionnellement entre montrer des bluffs et des value bets pour créer une image confuse et imprévisible.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">🔴</div>
+      <div class="block-title">Le "bluff catching" — Comment défendre face aux bluffs</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Tout aussi important que savoir bluffer : savoir reconnaître et contrer les bluffs adverses.</p>
+      <ul class="content-list">
+        <li><strong>Range polaire :</strong> si l'adversaire a une range soit très forte soit très faible (peu de mains moyennes), c'est suspect. Les bonnes mains checkent parfois pour induire des bluffs.</li>
+        <li><strong>Sizing incohérent :</strong> une très grosse mise sur un board simple peut indiquer un bluff — l'adversaire essaie d'acheter le pot.</li>
+        <li><strong>Timing :</strong> les bluffs sont souvent associés à des décisions rapides (sur des boards évidents) ou très lentes (hésitation calculée).</li>
+        <li><strong>Spots de bluff évidents :</strong> si un tirage évident est complété à la river et que l'adversaire bet gros — il a soit le draw complété, soit il bluff la peur du draw.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 Règle d'or</div>
+        <p>"Call avec les mains les plus bluff-catchantes de ta range — celles qui sont trop fortes pour folder mais trop faibles pour raise." Ex : top pair kicker moyen face à une river bet.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-muted">🧠</div>
+      <div class="block-title">Psychologie du bluff — L'aspect mental</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Le bluff a une dimension psychologique importante. Comprendre et gérer ses émotions est essentiel.</p>
+      <ul class="content-list">
+        <li><strong>Ne pas être attaché au résultat :</strong> un bon bluff qui est callé reste un bon bluff si la décision était correcte. L'évaluation d'un bluff se fait sur le long terme, pas par main.</li>
+        <li><strong>Éviter le tilt-bluff :</strong> bluffer après plusieurs mauvaises mains par frustration est l'erreur la plus coûteuse. Le bluff émotionnel = argent perdu.</li>
+        <li><strong>Rester neutre :</strong> ne rien montrer émotionnellement que tu bluffes ou que tu aies une bonne main. Même comportement dans les deux cas.</li>
+        <li><strong>Accepter les pertes :</strong> même les meilleurs bluffs sont callés parfois. C'est normal. L'important est que la fréquence soit correcte sur le long terme.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     CHAPITRE 4 — RÉVISION (15 min)
+═══════════════════════════════════ -->
+
+<div class="chapter" id="ch-3">
+  <div class="chapter-hero" data-icon="🎯">
+    <div class="section-tag">④ Révision active · 15 min</div>
+    <div class="chapter-title">Test final & mémorisation</div>
+    <div class="chapter-desc">Timer, checklist et 5 questions sur le bluff et la semi-bluff.</div>
+    <div class="chips">
+      <span class="chip">⏱ 15 min</span>
+      <span class="chip">✅ Checklist</span>
+      <span class="chip">🎯 5 questions</span>
+    </div>
+  </div>
+
+  <div class="revision-timer">
+    <div class="rt-label">TIMER DE RÉVISION</div>
+    <div class="rt-display" id="rtDisplay">15:00</div>
+    <div class="rt-progress"><div class="rt-fill" id="rtFill" style="width:0%"></div></div>
+    <div class="rt-btns">
+      <button class="rt-start" id="rtBtn" onclick="toggleRevisionTimer()">▶ Démarrer</button>
+      <button class="rt-reset" onclick="resetRevisionTimer()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="score-block">
+    <div class="score-val" id="quizScore">0/5</div>
+    <div class="score-lbl">Score Quiz</div>
+    <div class="score-bar"><div class="score-fill" id="scoreFill" style="width:0%"></div></div>
+  </div>
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Checklist</div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je comprends la différence entre bluff pur et semi-bluff</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je sais calculer si un bluff est mathématiquement profitable (% fold requis)</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je connais les meilleurs spots pour bluffer (HU, board favorable, position)</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je comprends pourquoi le semi-bluff est supérieur au bluff pur</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je connais le ratio value/bluff optimal selon la taille de mise</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je sais reconnaître une situation de bluff adverse (bluff catching)</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je comprends l'importance de l'image de table pour le bluff</div></div>
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin:20px 0 10px;">Quiz final</div>
+
+  <div class="quiz-item" id="qi-0">
+    <div class="quiz-num">Question 01</div>
+    <div class="quiz-q">Le pot est 80BB. Tu bluffes 40BB à la river. Quel % du temps l'adversaire doit-il folder pour que ton bluff soit profitable ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(0,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-0">Formule : Mise / (Pot + Mise) = 40 / (80 + 40) = 40/120 = <strong>33%</strong>. Si l'adversaire folde plus de 33% du temps, ton bluff est mathématiquement profitable. Si il folde moins de 33%, c'est une perte à long terme.</div>
+    <div class="quiz-rate" id="qr-0"><button class="quiz-correct" onclick="rateQuiz(0,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(0,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-1">
+    <div class="quiz-num">Question 02</div>
+    <div class="quiz-q">Pourquoi ne faut-il JAMAIS bluffer une calling station ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(1,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-1">Une calling station appelle avec presque n'importe quelle main — son fold% est quasi nul. Si le fold% requis pour ton bluff est 33% et que la calling station ne folde que 5% du temps, ton bluff perd de l'argent à chaque fois. Contre une calling station, la stratégie correcte est de value bet thin et d'arrêter de bluffer complètement.</div>
+    <div class="quiz-rate" id="qr-1"><button class="quiz-correct" onclick="rateQuiz(1,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(1,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-2">
+    <div class="quiz-num">Question 03</div>
+    <div class="quiz-q">Tu as 6♠7♠ sur un flop 8♠9♦T♣. Tu as un open-ended straight draw. L'adversaire bet 60% pot. Que fais-tu ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(2,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-2">Plusieurs bonnes options. <strong>Call</strong> est correct car tu as 8 outs (~32% de compléter) avec de bonnes implied odds — si tu touches, l'adversaire paiera cher. <strong>Raise semi-bluff</strong> est aussi excellent : tu as fold equity + 32% d'equity si callé. Le raise représente un set ou une quinte déjà faite. Fold serait une erreur — OESD est trop fort pour folder face à 60% pot.</div>
+    <div class="quiz-rate" id="qr-2"><button class="quiz-correct" onclick="rateQuiz(2,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(2,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-3">
+    <div class="quiz-num">Question 04</div>
+    <div class="quiz-q">Tu viens de montrer un bluff (l'adversaire a callé et tu avais rien). Comment adaptes-tu ta stratégie immédiatement après ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(3,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-3">Après avoir montré un bluff, les adversaires te paient plus souvent car ils pensent que tu bluffes souvent. <strong>Exploite ça en faisant plus de value bets</strong> — surtout avec des grosses mains. C'est le moment le moins opportun pour re-bluffer immédiatement. Au contraire, slow-play tes monstres et laisse-les payer.</div>
+    <div class="quiz-rate" id="qr-3"><button class="quiz-correct" onclick="rateQuiz(3,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(3,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-4">
+    <div class="quiz-num">Question 05</div>
+    <div class="quiz-q">Quelle est la différence principale entre un bluff pur et un semi-bluff en termes d'equity ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(4,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-4">Un <strong>bluff pur</strong> a 0% d'equity si l'adversaire appelle — tu n'as aucune chance de gagner au showdown. Un <strong>semi-bluff</strong> conserve une equity positive même si l'adversaire appelle (ex: flush draw = 36%, OESD = 32%). C'est pourquoi le semi-bluff est toujours supérieur au bluff pur quand tu as le choix : tu gagnes si fold, tu as encore une chance si call.</div>
+    <div class="quiz-rate" id="qr-4"><button class="quiz-correct" onclick="rateQuiz(4,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(4,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="info-box gold" style="margin-top:20px;">
+    <div class="info-label">🏆 Règle d'or — Session 04</div>
+    <p>"Le semi-bluff > le bluff pur. Bluffer avec un draw = deux façons de gagner. Bluffer au bon moment avec le bon adversaire = profit. Bluffer par émotion = perte. La fréquence est tout."</p>
+  </div>
+</div>
+
+</div><!-- end scroll-area -->
+
+<div class="bottom-nav">
+  <button class="prev-chapter-btn" id="prevBtn" onclick="prevChapter()" style="display:none">‹</button>
+  <button class="next-chapter-btn" id="nextBtn" onclick="nextChapter()">② Semi-bluff →</button>
+</div>
+</div>
+
+<script>
+let currentChapter=0;
+const chapterLabels=['CHAPITRE 1/4 · BLUFF PUR','CHAPITRE 2/4 · SEMI-BLUFF','CHAPITRE 3/4 · FRÉQUENCE','CHAPITRE 4/4 · RÉVISION'];
+const nextLabels=['② Semi-bluff →','③ Fréquence & équilibre →','④ Révision →','✓ Session terminée !'];
+const progressPcts=[12,37,62,100];
+const chapterTimes=[25*60,30*60,25*60,15*60];
+
+function goChapter(n,btn){
+  document.querySelectorAll('.chapter').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.chapter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ch-'+n).classList.add('active');
+  if(btn)btn.classList.add('active');
+  else document.querySelectorAll('.chapter-btn')[n].classList.add('active');
+  document.querySelector('.scroll-area').scrollTop=0;
+  currentChapter=n;
+  document.getElementById('chapterLabel').textContent=chapterLabels[n];
+  document.getElementById('progressFill').style.width=progressPcts[n]+'%';
+  document.getElementById('prevBtn').style.display=n===0?'none':'flex';
+  document.getElementById('prevBtn').style.alignItems='center';
+  document.getElementById('prevBtn').style.justifyContent='center';
+  document.getElementById('nextBtn').textContent=nextLabels[n];
+  if(!globalRunning){globalSecs=chapterTimes[n];const m=Math.floor(globalSecs/60).toString().padStart(2,'0');document.getElementById('globalTimer').textContent=m+':00';}
+}
+function nextChapter(){
+  if(currentChapter<3)goChapter(currentChapter+1,null);
+  else{
+    const done=JSON.parse(localStorage.getItem('completedSessions')||'[]');
+    if(!done.includes(4)){done.push(4);localStorage.setItem('completedSessions',JSON.stringify(done));}
+    window.location.href='index.html';
+  }
+}
+function prevChapter(){if(currentChapter>0)goChapter(currentChapter-1,null);}
+function toggleBlock(h){h.closest('.block').classList.toggle('open');}
+
+let globalSecs=25*60,globalRunning=false,globalInterval=null;
+function toggleGlobalTimer(){
+  if(globalRunning){clearInterval(globalInterval);globalRunning=false;document.getElementById('globalTimer').classList.remove('running');}
+  else{globalRunning=true;document.getElementById('globalTimer').classList.add('running');globalInterval=setInterval(()=>{if(globalSecs<=0){clearInterval(globalInterval);globalRunning=false;return;}globalSecs--;const m=Math.floor(globalSecs/60).toString().padStart(2,'0');const s=(globalSecs%60).toString().padStart(2,'0');document.getElementById('globalTimer').textContent=m+':'+s;},1000);}
+}
+
+// FOLD EQUITY CALCULATOR
+let fePot=100,feBluff=50,feFold=40;
+function updateFE(type,val){
+  if(type==='pot')fePot=parseInt(val);
+  if(type==='bluff')feBluff=parseInt(val);
+  if(type==='fold')feFold=parseInt(val);
+  document.getElementById('fePot').textContent=fePot+' BB';
+  document.getElementById('feBluff').textContent=feBluff+' BB';
+  document.getElementById('feFold').textContent=feFold+'%';
+  const reqFold=Math.round(feBluff/(fePot+feBluff)*100);
+  const profitable=feFold>=reqFold;
+  const ev=profitable?Math.round((feFold/100*fePot)-(1-feFold/100)*feBluff):Math.round((feFold/100*fePot)-(1-feFold/100)*feBluff);
+  document.getElementById('feResult').innerHTML=`
+    <div class="fe-verdict" style="color:${profitable?'var(--green)':'var(--red)'}">${profitable?'✅ Bluff PROFITABLE':'❌ Bluff NON profitable'}</div>
+    <div class="fe-explain">Fold requis : <strong>${reqFold}%</strong>. Fold estimé : <strong>${feFold}%</strong>. EV moyenne : <strong style="color:${ev>=0?'var(--green)':'var(--red)'}">${ev>0?'+':''}${ev} BB</strong> par bluff.</div>
+  `;
+}
+updateFE('',0);
+
+// BLUFF SIMULATOR
+const bluffCorrect=[1,1,0];
+function bluffAnswer(scenario,choice,btn){
+  const btns=btn.closest('.bluff-choices').querySelectorAll('.bluff-btn');
+  btns.forEach(b=>b.style.pointerEvents='none');
+  const isCorrect=choice===bluffCorrect[scenario]||(scenario===1&&choice===1);
+  btn.classList.add(isCorrect?'correct':'wrong');
+  if(!isCorrect)btns[bluffCorrect[scenario]].classList.add('correct');
+  document.getElementById('bluff-expl-'+scenario).style.display='block';
+}
+
+// REVISION TIMER
+let rtSecs=15*60,rtRunning=false,rtInterval=null;
+function toggleRevisionTimer(){
+  if(rtRunning){clearInterval(rtInterval);rtRunning=false;document.getElementById('rtBtn').textContent='▶ Reprendre';}
+  else{rtRunning=true;document.getElementById('rtBtn').textContent='⏸ Pause';rtInterval=setInterval(()=>{if(rtSecs<=0){clearInterval(rtInterval);rtRunning=false;document.getElementById('rtDisplay').textContent='✓ FINI';document.getElementById('rtBtn').textContent='✓ Complété';return;}rtSecs--;document.getElementById('rtDisplay').textContent=Math.floor(rtSecs/60).toString().padStart(2,'0')+':'+((rtSecs%60).toString().padStart(2,'0'));document.getElementById('rtFill').style.width=((15*60-rtSecs)/(15*60)*100)+'%';},1000);}
+}
+function resetRevisionTimer(){clearInterval(rtInterval);rtRunning=false;rtSecs=15*60;document.getElementById('rtDisplay').textContent='15:00';document.getElementById('rtFill').style.width='0%';document.getElementById('rtBtn').textContent='▶ Démarrer';}
+function toggleCheck(el){el.classList.toggle('done');el.querySelector('.check-box2').textContent=el.classList.contains('done')?'✓':'';}
+let quizAnswers={};
+function revealQuiz(i,btn){document.getElementById('qa-'+i).style.display='block';btn.style.display='none';document.getElementById('qr-'+i).classList.add('show');}
+function rateQuiz(i,result){quizAnswers[i]=result;document.getElementById('qi-'+i).classList.remove('correct','wrong');document.getElementById('qi-'+i).classList.add(result);const correct=Object.values(quizAnswers).filter(v=>v==='correct').length;document.getElementById('quizScore').textContent=correct+'/'+Math.max(Object.keys(quizAnswers).length,5);document.getElementById('scoreFill').style.width=(correct/5*100)+'%';}
+</script>
+
+</body>
+</html>
