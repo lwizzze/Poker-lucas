@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Poker">
+<meta name="theme-color" content="#0a0910">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Poker Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0910;
+  --bg2: #111020;
+  --surface: #16152a;
+  --surface2: #1d1c35;
+  --border: #252440;
+  --gold: #d4a843;
+  --gold-light: #f0c96a;
+  --red: #e84545;
+  --teal: #3ecfca;
+  --text: #e8e6f5;
+  --text-dim: #8886aa;
+  --text-muted: #4a4868;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+- { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+height: 100%; width: 100%;
+background: #0a0910 !important;
+color: #e8e6f5 !important;
+font-family: ‘DM Sans’, sans-serif;
+overflow: hidden;
+}
+.view { background: #0a0910 !important; }
+.scroll-area { background: #0a0910 !important; }
+
+/* ===== APP SHELL ===== */
+#app { height: 100dvh; display: flex; flex-direction: column; }
+
+/* ===== HEADER ===== */
+.header {
+padding: calc(var(–safe-top) + 14px) 20px 14px;
+background: var(–bg);
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-shrink: 0;
+position: relative;
+z-index: 10;
+}
+.header-logo {
+font-family: ‘Playfair Display’, serif;
+font-size: 20px;
+font-weight: 900;
+color: var(–gold);
+letter-spacing: -0.5px;
+}
+.header-sub { font-size: 11px; color: var(–text-muted); font-family: ‘DM Mono’, monospace; letter-spacing: 1px; }
+.header-session {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 20px;
+padding: 4px 12px;
+font-size: 12px;
+font-family: ‘DM Mono’, monospace;
+color: var(–gold);
+}
+
+/* ===== SCROLL AREA ===== */
+.scroll-area {
+flex: 1;
+overflow-y: auto;
+-webkit-overflow-scrolling: touch;
+overscroll-behavior: contain;
+}
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+padding-bottom: calc(var(–safe-bottom) + 6px);
+background: rgba(10,9,16,0.97);
+border-top: 1px solid var(–border);
+display: flex;
+flex-shrink: 0;
+backdrop-filter: blur(20px);
+}
+.nav-btn {
+flex: 1;
+padding: 10px 4px 6px;
+background: none;
+border: none;
+cursor: pointer;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 4px;
+transition: opacity 0.2s;
+}
+.nav-icon { font-size: 22px; line-height: 1; }
+.nav-label { font-size: 10px; font-family: ‘DM Mono’, monospace; letter-spacing: 0.5px; color: var(–text-muted); text-transform: uppercase; }
+.nav-btn.active .nav-label { color: var(–gold); }
+.nav-btn.active .nav-icon { filter: drop-shadow(0 0 6px rgba(212,168,67,0.6)); }
+
+/* ===== VIEWS ===== */
+.view { display: none; padding: 20px; padding-bottom: 32px; }
+.view.active { display: block; }
+
+/* ===== HOME VIEW ===== */
+.welcome-block {
+background: linear-gradient(135deg, #1d1c35 0%, #16152a 100%);
+border: 1px solid var(–border);
+border-radius: 16px;
+padding: 24px 20px;
+margin-bottom: 20px;
+position: relative;
+overflow: hidden;
+}
+.welcome-block::after {
+content: ‘♠’;
+position: absolute;
+right: 16px;
+top: 50%;
+transform: translateY(-50%);
+font-size: 64px;
+opacity: 0.05;
+}
+.welcome-greeting {
+font-size: 12px;
+font-family: ‘DM Mono’, monospace;
+color: var(–text-muted);
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-bottom: 6px;
+}
+.welcome-name {
+font-family: ‘Playfair Display’, serif;
+font-size: 28px;
+font-weight: 900;
+color: #fff;
+margin-bottom: 10px;
+}
+.welcome-name span { color: var(–gold); }
+.welcome-stats {
+display: flex;
+gap: 16px;
+margin-top: 16px;
+}
+.stat-pill {
+background: rgba(255,255,255,0.05);
+border-radius: 8px;
+padding: 8px 12px;
+text-align: center;
+}
+.stat-val { font-family: ‘DM Mono’, monospace; font-size: 18px; color: var(–gold); font-weight: 500; }
+.stat-lbl { font-size: 10px; color: var(–text-muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+.section-title {
+font-size: 11px;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 2px;
+text-transform: uppercase;
+color: var(–text-muted);
+margin: 24px 0 12px;
+}
+
+.session-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 16px;
+margin-bottom: 10px;
+display: flex;
+align-items: center;
+gap: 14px;
+cursor: pointer;
+transition: all 0.2s;
+position: relative;
+overflow: hidden;
+}
+.session-card:active { transform: scale(0.98); }
+.session-card.locked { opacity: 0.4; }
+.session-card.done { border-color: rgba(62,207,202,0.3); }
+.session-num {
+width: 40px; height: 40px;
+border-radius: 10px;
+background: var(–surface2);
+border: 1px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+font-family: ‘Playfair Display’, serif;
+font-size: 18px;
+font-weight: 700;
+color: var(–gold);
+flex-shrink: 0;
+}
+.session-card.done .session-num { background: rgba(62,207,202,0.1); border-color: rgba(62,207,202,0.3); color: var(–teal); }
+.session-info { flex: 1; min-width: 0; }
+.session-name { font-size: 15px; font-weight: 500; color: var(–text); margin-bottom: 3px; }
+.session-meta { font-size: 12px; color: var(–text-muted); font-family: ‘DM Mono’, monospace; }
+.session-badge {
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+padding: 3px 8px;
+border-radius: 10px;
+flex-shrink: 0;
+}
+.badge-done { background: rgba(62,207,202,0.1); color: var(–teal); border: 1px solid rgba(62,207,202,0.2); }
+.badge-current { background: rgba(212,168,67,0.1); color: var(–gold); border: 1px solid rgba(212,168,67,0.2); }
+.badge-locked { background: var(–surface2); color: var(–text-muted); border: 1px solid var(–border); }
+
+/* ===== PDR VIEW ===== */
+.pdr-tabs {
+display: flex;
+gap: 8px;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+padding-bottom: 4px;
+margin-bottom: 20px;
+scrollbar-width: none;
+}
+.pdr-tabs::-webkit-scrollbar { display: none; }
+.pdr-tab {
+flex-shrink: 0;
+padding: 7px 16px;
+border-radius: 20px;
+border: 1px solid var(–border);
+background: none;
+color: var(–text-muted);
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+letter-spacing: 1px;
+text-transform: uppercase;
+cursor: pointer;
+transition: all 0.2s;
+}
+.pdr-tab.active { background: var(–gold); color: var(–bg); border-color: var(–gold); font-weight: 500; }
+
+.pdr-content { display: none; }
+.pdr-content.active { display: block; }
+
+.pdr-hero {
+background: linear-gradient(135deg, var(–surface) 0%, var(–bg2) 100%);
+border: 1px solid var(–border);
+border-radius: 14px;
+padding: 20px;
+margin-bottom: 20px;
+}
+.pdr-session-tag {
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 2px;
+color: var(–gold);
+text-transform: uppercase;
+margin-bottom: 8px;
+}
+.pdr-title {
+font-family: ‘Playfair Display’, serif;
+font-size: 24px;
+font-weight: 900;
+color: #fff;
+margin-bottom: 8px;
+line-height: 1.2;
+}
+.pdr-desc { font-size: 14px; color: var(–text-dim); font-style: italic; line-height: 1.5; }
+.pdr-chips {
+display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;
+}
+.pdr-chip {
+font-size: 11px;
+font-family: ‘DM Mono’, monospace;
+padding: 4px 10px;
+border-radius: 20px;
+border: 1px solid var(–border);
+color: var(–text-muted);
+}
+
+.pdr-block {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 12px;
+margin-bottom: 12px;
+overflow: hidden;
+}
+.pdr-block-header {
+padding: 14px 16px;
+display: flex;
+align-items: center;
+gap: 12px;
+cursor: pointer;
+}
+.pdr-block-icon {
+width: 32px; height: 32px;
+border-radius: 8px;
+display: flex; align-items: center; justify-content: center;
+font-size: 16px;
+flex-shrink: 0;
+}
+.icon-red { background: rgba(232,69,69,0.15); }
+.icon-gold { background: rgba(212,168,67,0.15); }
+.icon-teal { background: rgba(62,207,202,0.15); }
+.icon-muted { background: var(–surface2); }
+
+.pdr-block-title { font-size: 15px; font-weight: 500; color: var(–text); flex: 1; }
+.pdr-block-arrow { color: var(–text-muted); font-size: 12px; transition: transform 0.2s; }
+.pdr-block.open .pdr-block-arrow { transform: rotate(90deg); }
+
+.pdr-block-body {
+display: none;
+padding: 0 16px 16px;
+border-top: 1px solid var(–border);
+}
+.pdr-block.open .pdr-block-body { display: block; }
+.pdr-block-body p { font-size: 14px; color: var(–text-dim); line-height: 1.7; margin-top: 12px; }
+.pdr-block-body strong { color: var(–text); }
+.pdr-block-body ul { padding-left: 0; list-style: none; margin-top: 10px; }
+.pdr-block-body li {
+font-size: 14px;
+color: var(–text-dim);
+padding: 6px 0;
+border-bottom: 1px solid var(–border);
+line-height: 1.5;
+}
+.pdr-block-body li:last-child { border-bottom: none; }
+.pdr-block-body li::before { content: ’→ ’; color: var(–gold); }
+
+.callout-box {
+background: rgba(62,207,202,0.05);
+border: 1px solid rgba(62,207,202,0.2);
+border-radius: 10px;
+padding: 14px;
+margin-top: 14px;
+}
+.callout-box p { margin-top: 0; font-style: italic; color: var(–text); }
+.callout-box .callout-label {
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 2px;
+color: var(–teal);
+text-transform: uppercase;
+margin-bottom: 6px;
+}
+
+.gold-box {
+background: rgba(212,168,67,0.05);
+border: 1px solid rgba(212,168,67,0.2);
+border-radius: 10px;
+padding: 14px;
+margin-top: 14px;
+}
+.gold-box p { margin-top: 0; color: #d4b96a; }
+.gold-box .gold-label {
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 2px;
+color: var(–gold);
+text-transform: uppercase;
+margin-bottom: 6px;
+}
+
+/* ===== FLASHCARDS VIEW ===== */
+.fc-filter {
+display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px;
+margin-bottom: 20px; scrollbar-width: none;
+}
+.fc-filter::-webkit-scrollbar { display: none; }
+.fc-filter-btn {
+flex-shrink: 0;
+padding: 6px 16px;
+border-radius: 20px;
+border: 1px solid var(–border);
+background: none;
+color: var(–text-muted);
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+cursor: pointer;
+transition: all 0.2s;
+text-transform: uppercase;
+letter-spacing: 1px;
+}
+.fc-filter-btn.active { background: var(–gold); color: var(–bg); border-color: var(–gold); }
+
+.fc-progress {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 10px;
+font-size: 12px;
+font-family: ‘DM Mono’, monospace;
+color: var(–text-muted);
+}
+.fc-progress-bar {
+height: 2px;
+background: var(–border);
+border-radius: 2px;
+margin-bottom: 20px;
+}
+.fc-progress-fill {
+height: 100%;
+background: var(–gold);
+border-radius: 2px;
+transition: width 0.4s ease;
+}
+
+.fc-card {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 16px;
+padding: 28px 22px;
+min-height: 220px;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+cursor: pointer;
+transition: all 0.3s;
+position: relative;
+margin-bottom: 16px;
+}
+.fc-card.revealed {
+background: #0d1f0d;
+border-color: rgba(62,207,202,0.3);
+}
+.fc-cat-badge {
+position: absolute;
+top: 14px;
+left: 14px;
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 1.5px;
+text-transform: uppercase;
+padding: 3px 10px;
+border-radius: 10px;
+}
+.cat-position { background: rgba(232,69,69,0.15); color: #e84545; }
+.cat-mains { background: rgba(212,168,67,0.15); color: var(–gold); }
+.cat-preflop { background: rgba(62,207,202,0.15); color: var(–teal); }
+.cat-concepts { background: rgba(78,207,122,0.15); color: #4ecf7a; }
+.cat-erreurs { background: rgba(155,89,182,0.15); color: #c39bd3; }
+
+.range-pos-btn {
+padding: 10px 4px;
+background: #16152a;
+border: 1px solid #252440;
+border-radius: 10px;
+color: #4a4868;
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.2s;
+text-align: center;
+}
+.range-pos-btn.range-pos-active {
+background: #d4a843;
+border-color: #d4a843;
+color: #0a0910;
+font-weight: 700;
+}
+
+/* SESSION STATUS */
+.badge-done { background:rgba(78,207,122,0.1); color:#4ecf7a; border:1px solid rgba(78,207,122,0.3); }
+.badge-new { background:rgba(212,168,67,0.1); color:#d4a843; border:1px solid rgba(212,168,67,0.3); }
+
+/* POKER TABLE */
+.profile-btn {
+background:#16152a; border:1px solid #252440; border-radius:12px;
+padding:14px 10px; text-align:center; cursor:pointer; transition:all 0.2s;
+}
+.profile-btn.active { border-color:#d4a843; background:rgba(212,168,67,0.08); }
+.profile-btn:active { transform:scale(0.97); }
+.stack-btn, .blinds-btn {
+flex:1; padding:10px 8px; background:#16152a; border:1px solid #252440;
+border-radius:10px; color:#4a4868; font-family:‘DM Mono’,monospace;
+font-size:11px; cursor:pointer; transition:all 0.2s; letter-spacing:1px;
+text-align:center;
+}
+.stack-btn.active, .blinds-btn.active {
+background:#d4a843; border-color:#d4a843; color:#0a0910; font-weight:700;
+}
+.action-btn {
+width:100%; padding:14px; border-radius:10px; border:1px solid;
+font-family:‘DM Mono’,monospace; font-size:13px; font-weight:600;
+letter-spacing:1px; cursor:pointer; transition:all 0.2s; text-align:center;
+}
+.action-fold { background:rgba(232,69,69,0.1); border-color:rgba(232,69,69,0.3); color:#e84545; }
+.action-call { background:rgba(62,207,202,0.1); border-color:rgba(62,207,202,0.3); color:#3ecfca; }
+.action-raise { background:rgba(212,168,67,0.1); border-color:rgba(212,168,67,0.3); color:#d4a843; }
+.action-btn:active { transform:scale(0.97); }
+
+.fc-question {
+font-family: ‘Playfair Display’, serif;
+font-size: 18px;
+color: #e8e6f5 !important;
+line-height: 1.5;
+font-style: italic;
+}
+.fc-answer {
+display: none;
+font-size: 16px;
+color: #7dde7d !important;
+line-height: 1.6;
+}
+.fc-card.revealed .fc-question { display: none; }
+.fc-card.revealed .fc-answer { display: block; }
+.fc-hint {
+font-size: 11px;
+color: #4a4868 !important;
+font-family: ‘DM Mono’, monospace;
+text-align: center;
+margin-bottom: 16px;
+letter-spacing: 1px;
+}
+#view-fc { background: #0a0910 !important; color: #e8e6f5 !important; }
+.fc-progress { color: #4a4868 !important; }
+.fc-filter-btn { color: #4a4868 !important; background: #16152a !important; border-color: #252440 !important; }
+.fc-filter-btn.active { background: #d4a843 !important; color: #0a0910 !important; border-color: #d4a843 !important; }
+.fc-card { background: #16152a !important; border-color: #252440 !important; }
+.fc-nav-btn { background: #16152a !important; border-color: #252440 !important; color: #8886aa !important; }
+
+.fc-nav {
+display: flex;
+gap: 10px;
+align-items: center;
+justify-content: center;
+}
+.fc-nav-btn {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px;
+color: var(–text-dim);
+font-size: 18px;
+width: 48px;
+height: 48px;
+cursor: pointer;
+display: flex;
+align-items: center;
+justify-content: center;
+transition: all 0.2s;
+}
+.fc-next-btn {
+background: var(–gold);
+border: none;
+border-radius: 10px;
+color: var(–bg);
+font-family: ‘DM Mono’, monospace;
+font-size: 13px;
+font-weight: 500;
+padding: 0 28px;
+height: 48px;
+cursor: pointer;
+letter-spacing: 1px;
+transition: all 0.2s;
+}
+.fc-next-btn:active { transform: scale(0.97); }
+
+/* ===== QUIZ VIEW ===== */
+.quiz-header {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 16px;
+margin-bottom: 20px;
+display: flex;
+align-items: center;
+gap: 14px;
+}
+.quiz-score-display {
+font-family: ‘Playfair Display’, serif;
+font-size: 28px;
+font-weight: 900;
+color: var(–gold);
+}
+.quiz-score-lbl { font-size: 11px; color: var(–text-muted); font-family: ‘DM Mono’, monospace; letter-spacing: 1px; }
+.quiz-q-block {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 20px;
+margin-bottom: 12px;
+}
+.quiz-q-num {
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+color: var(–text-muted);
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-bottom: 10px;
+}
+.quiz-question {
+font-size: 16px;
+color: var(–text);
+line-height: 1.5;
+margin-bottom: 16px;
+font-style: italic;
+}
+.quiz-reveal-btn {
+width: 100%;
+background: transparent;
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–text-muted);
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+letter-spacing: 1px;
+text-transform: uppercase;
+padding: 10px;
+cursor: pointer;
+transition: all 0.2s;
+}
+.quiz-reveal-btn:hover { border-color: var(–teal); color: var(–teal); }
+.quiz-answer-box {
+display: none;
+background: rgba(13,31,13,0.8);
+border: 1px solid rgba(125,222,125,0.2);
+border-radius: 8px;
+padding: 12px 14px;
+margin-top: 10px;
+font-size: 14px;
+color: #7dde7d;
+line-height: 1.6;
+}
+.quiz-score-btns {
+display: flex;
+gap: 8px;
+margin-top: 12px;
+}
+.quiz-correct-btn {
+flex: 1;
+background: rgba(62,207,202,0.1);
+border: 1px solid rgba(62,207,202,0.3);
+color: var(–teal);
+border-radius: 8px;
+padding: 10px;
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.2s;
+}
+.quiz-wrong-btn {
+flex: 1;
+background: rgba(232,69,69,0.1);
+border: 1px solid rgba(232,69,69,0.3);
+color: var(–red);
+border-radius: 8px;
+padding: 10px;
+font-family: ‘DM Mono’, monospace;
+font-size: 11px;
+letter-spacing: 1px;
+cursor: pointer;
+transition: all 0.2s;
+}
+.quiz-q-block.correct { border-color: rgba(62,207,202,0.3); background: rgba(62,207,202,0.03); }
+.quiz-q-block.wrong { border-color: rgba(232,69,69,0.3); background: rgba(232,69,69,0.03); }
+
+/* ===== TRACKER VIEW ===== */
+.tracker-summary {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+margin-bottom: 20px;
+}
+.tracker-stat {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 16px;
+text-align: center;
+}
+.tracker-stat-val {
+font-family: ‘Playfair Display’, serif;
+font-size: 28px;
+font-weight: 700;
+color: var(–gold);
+margin-bottom: 4px;
+}
+.tracker-stat-lbl {
+font-size: 10px;
+font-family: ‘DM Mono’, monospace;
+color: var(–text-muted);
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+
+.add-session-btn {
+width: 100%;
+background: var(–gold);
+border: none;
+border-radius: 12px;
+color: var(–bg);
+font-family: ‘DM Mono’, monospace;
+font-size: 13px;
+font-weight: 500;
+letter-spacing: 1px;
+padding: 14px;
+cursor: pointer;
+margin-bottom: 20px;
+transition: all 0.2s;
+}
+.add-session-btn:active { transform: scale(0.98); }
+
+.session-log-item {
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 14px 16px;
+margin-bottom: 8px;
+display: flex;
+align-items: center;
+gap: 14px;
+}
+.log-date {
+font-family: ‘DM Mono’, monospace;
+font-size: 12px;
+color: var(–text-muted);
+min-width: 60px;
+}
+.log-info { flex: 1; }
+.log-session-name { font-size: 14px; color: var(–text); margin-bottom: 2px; }
+.log-duration { font-size: 12px; color: var(–text-muted); font-family: ‘DM Mono’, monospace; }
+.log-rating { font-size: 16px; }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.8);
+z-index: 100;
+align-items: flex-end;
+backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+background: var(–bg2);
+border: 1px solid var(–border);
+border-radius: 20px 20px 0 0;
+padding: 24px 20px calc(var(–safe-bottom) + 24px);
+width: 100%;
+max-height: 80vh;
+overflow-y: auto;
+}
+.modal-title {
+font-family: ‘Playfair Display’, serif;
+font-size: 20px;
+font-weight: 700;
+color: #fff;
+margin-bottom: 20px;
+}
+.modal-field { margin-bottom: 16px; }
+.modal-label {
+font-size: 11px;
+font-family: ‘DM Mono’, monospace;
+color: var(–text-muted);
+letter-spacing: 1px;
+text-transform: uppercase;
+margin-bottom: 8px;
+display: block;
+}
+.modal-select, .modal-input {
+width: 100%;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px;
+color: var(–text);
+font-family: ‘DM Mono’, monospace;
+font-size: 14px;
+padding: 12px 14px;
+appearance: none;
+-webkit-appearance: none;
+}
+.modal-rating-btns {
+display: flex;
+gap: 10px;
+}
+.rating-btn {
+flex: 1;
+background: var(–surface);
+border: 1px solid var(–border);
+border-radius: 10px;
+padding: 14px 8px;
+font-size: 22px;
+cursor: pointer;
+transition: all 0.2s;
+text-align: center;
+}
+.rating-btn.selected { border-color: var(–gold); background: rgba(212,168,67,0.1); }
+.modal-save-btn {
+width: 100%;
+background: var(–gold);
+border: none;
+border-radius: 12px;
+color: var(–bg);
+font-family: ‘DM Mono’, monospace;
+font-size: 13px;
+font-weight: 500;
+letter-spacing: 1px;
+padding: 14px;
+cursor: pointer;
+margin-top: 8px;
+}
+.modal-cancel {
+width: 100%;
+background: none;
+border: none;
+color: var(–text-muted);
+font-family: ‘DM Mono’, monospace;
+font-size: 12px;
+padding: 12px;
+cursor: pointer;
+text-align: center;
+letter-spacing: 1px;
+}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+
+  <div class="header">
+    <div>
+      <div class="header-logo">♠ Poker</div>
+      <div class="header-sub">LUCAS · ACADEMY</div>
+    </div>
+    <div class="header-session" id="headerSession">Session 1/10</div>
+  </div>
+
+  <!-- SCROLL AREA -->
+
+  <div class="scroll-area">
+
+```
+<!-- HOME VIEW -->
+<div class="view active" id="view-home">
+  <div class="welcome-block">
+    <div class="welcome-greeting">Bienvenue,</div>
+    <div class="welcome-name">Lucas <span>♠</span></div>
+    <div style="font-size:14px; color:var(--text-dim);">Plan Texas Hold'em No-Limit · 10 sessions · 2h chacune</div>
+    <div class="welcome-stats">
+      <div class="stat-pill">
+        <div class="stat-val" id="statSessions">0</div>
+        <div class="stat-lbl">Sessions</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val" id="statHeures">0h</div>
+        <div class="stat-lbl">Heures</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-val" id="statProgression">0%</div>
+        <div class="stat-lbl">Progression</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Programme — Phase 1</div>
+
+  <div class="session-card" id="scard-1" onclick="window.location='session01-cours.html'">
+    <div class="session-num" id="snum-1">01</div>
+    <div class="session-info">
+      <div class="session-name">Les mains, la position et la sélection</div>
+      <div class="session-meta">Fondamentaux · Pré-flop · 2h</div>
+    </div>
+    <span class="session-badge" id="sbadge-1">EN COURS</span>
+  </div>
+
+  <div class="session-card" id="scard-2" onclick="window.location='session02-cours.html'">
+    <div class="session-num" id="snum-2">02</div>
+    <div class="session-info">
+      <div class="session-name">La mise et l'agressivité</div>
+      <div class="session-meta">Betting · Value · 2h</div>
+    </div>
+    <span class="session-badge" id="sbadge-2">NOUVEAU</span>
+  </div>
+
+  <div class="session-card" id="scard-3" onclick="window.location='session03-cours.html'">
+    <div class="session-num" id="snum-3">03</div>
+    <div class="session-info">
+      <div class="session-name">Lire le board — textures de flop</div>
+      <div class="session-meta">Post-flop · Analyse · 2h</div>
+    </div>
+    <span class="session-badge" id="sbadge-3">NOUVEAU</span>
+  </div>
+
+  <div class="session-card" id="scard-4" onclick="window.location='session04-cours.html'">
+    <div class="session-num" id="snum-4">04</div>
+    <div class="session-info">
+      <div class="session-name">Le bluff et la semi-bluff</div>
+      <div class="session-meta">Stratégie · Avancé · 2h</div>
+    </div>
+    <span class="session-badge" id="sbadge-4">NOUVEAU</span>
+  </div>
+
+  <div class="session-card" id="scard-5" onclick="window.location='session05-cours.html'">
+    <div class="session-num" id="snum-5">05</div>
+    <div class="session-info">
+      <div class="session-name">Pot odds et equity</div>
+      <div class="session-meta">Math · Décision · 2h</div>
+    </div>
+    <span class="session-badge" id="sbadge-5">NOUVEAU</span>
+  </div>
+
+  <div class="section-title" style="margin-top:28px;">Phase 2 — Intermédiaire</div>
+
+  <div class="session-card locked">
+    <div class="session-num">06</div>
+    <div class="session-info">
+      <div class="session-name">Ranges et GTO intro</div>
+      <div class="session-meta">Théorie · 2h</div>
+    </div>
+    <span class="session-badge badge-locked">BIENTÔT</span>
+  </div>
+  <div class="session-card locked">
+    <div class="session-num" style="font-size:14px">07–10</div>
+    <div class="session-info">
+      <div class="session-name">Sessions avancées</div>
+      <div class="session-meta">Tournoi · Cash · Exploitative · 2h</div>
+    </div>
+    <span class="session-badge badge-locked">BIENTÔT</span>
+  </div>
+</div>
+
+<!-- PDR VIEW -->
+<div class="view" id="view-pdr">
+  <div class="pdr-tabs" id="pdrTabs">
+    <button class="pdr-tab active" onclick="switchPDR(0, this)">Session 01</button>
+    <button class="pdr-tab" onclick="switchPDR(1, this)">Hiérarchie</button>
+  </div>
+
+  <!-- PDR 0 : Session 01 overview -->
+  <div class="pdr-content active" id="pdr-0">
+    <div class="pdr-hero">
+      <div class="pdr-session-tag">Session 01 · Fondamentaux</div>
+      <div class="pdr-title">Les mains, la position et la sélection</div>
+      <div class="pdr-desc">Comprendre quelles mains jouer, depuis quelle position, et pourquoi c'est la base de tout.</div>
+      <div class="pdr-chips">
+        <span class="pdr-chip">⏱ 1h30 concepts</span>
+        <span class="pdr-chip">📖 Pré-flop</span>
+        <span class="pdr-chip">🎯 Débutant → Intermédiaire</span>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-red">📊</div>
+        <div class="pdr-block-title">Hiérarchie des mains</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <ul>
+          <li><strong>Mains premium :</strong> AA, KK, QQ, JJ, AKs — toujours raise</li>
+          <li><strong>Mains fortes :</strong> TT, 99, AQs, AJs, AKo, KQs</li>
+          <li><strong>Spéculatives :</strong> 22–88, suited connectors (76s, 87s…)</li>
+          <li><strong>Marginales :</strong> KJo, QTo — souvent fold</li>
+        </ul>
+        <div class="gold-box">
+          <div class="gold-label">🏆 Règle d'or</div>
+          <p>Jouer moins de mains, mieux les jouer. VPIP cible : 15–20%</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-gold">🗺️</div>
+        <div class="pdr-block-title">Les 9 positions</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <p><strong>UTG → UTG+1 → UTG+2 → HJ → CO → BTN → SB → BB</strong></p>
+        <ul>
+          <li><strong>BTN</strong> = meilleure position, agit en dernier post-flop</li>
+          <li><strong>SB/BB</strong> = pires positions, agissent en premier post-flop</li>
+          <li><strong>UTG</strong> = early position, jouer seulement mains très fortes</li>
+          <li>Plus tu es tard, plus tu peux jouer de mains</li>
+        </ul>
+        <div class="callout-box">
+          <div class="callout-label">💡 Concept clé</div>
+          <p>"Position = pouvoir. Serrez hors position."</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-teal">📈</div>
+        <div class="pdr-block-title">Charts pré-flop</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <ul>
+          <li>Quoi ouvrir (open raise) selon ta position</li>
+          <li>Quoi fold face à un raise</li>
+          <li>Quoi 3-bet (relancer un raise)</li>
+          <li>Commence par BTN et CO — les positions les plus fréquentes</li>
+        </ul>
+        <p><strong>Ressource :</strong> Upswing Poker — Free Preflop Charts (PDF gratuit à télécharger)</p>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-muted">✅</div>
+        <div class="pdr-block-title">Révision 15 min</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <ul>
+          <li>Réciter les 3 mains premium, les 3 mains spéculatives</li>
+          <li>Écrire les positions de mémoire : UTG, HJ, CO, BTN, SB, BB</li>
+          <li>Règle d'or retenue : "Position = pouvoir, serrez hors position"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDR 1 : Hiérarchie des mains -->
+  <div class="pdr-content" id="pdr-1">
+    <div class="pdr-hero">
+      <div class="pdr-session-tag">Session 01 · Concept #1</div>
+      <div class="pdr-title">Hiérarchie des Mains</div>
+      <div class="pdr-desc">Comprendre quelles mains valent quoi avant même de voir le flop.</div>
+      <div class="pdr-chips">
+        <span class="pdr-chip">⏱ 25 min</span>
+        <span class="pdr-chip">📖 4 catégories</span>
+        <span class="pdr-chip">🃏 Suited vs Offsuit</span>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-red">🔴</div>
+        <div class="pdr-block-title">Mains Premium</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <p style="font-family:'DM Mono',monospace; color:var(--gold); font-size:15px;">AA · KK · QQ · JJ · AKs</p>
+        <p>Les monstres du pré-flop. AA et KK dominent presque toujours. QQ et JJ sont très fortes mais craignent un As ou Roi sur le board. AKs combine valeur + tirage couleur royale.</p>
+        <div class="gold-box">
+          <div class="gold-label">Action</div>
+          <p>Toujours raise / 3-bet depuis toute position, sans exception.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-gold">🟡</div>
+        <div class="pdr-block-title">Mains Fortes</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <p style="font-family:'DM Mono',monospace; color:var(--gold); font-size:14px;">TT · 99 · AQs · AJs · KQs · AKo</p>
+        <p>Très bonnes mains mais contexte-dépendantes. TT/99 cherchent un set. AQs peut dominer ou être dominé. On ouvre/3-bet la plupart du temps.</p>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-teal">🟢</div>
+        <div class="pdr-block-title">Mains Spéculatives</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <p style="font-family:'DM Mono',monospace; color:var(--teal); font-size:13px;">88–22 · A2s–A9s · KJs · QJs · JTs · T9s · 98s · 87s</p>
+        <ul>
+          <li>Petites paires : jouent le <strong>set mining</strong> (~12% de toucher un set)</li>
+          <li>Suited connectors : cherchent couleur ou quinte</li>
+          <li>Besoin de stacks profonds et de bonne position</li>
+        </ul>
+        <div class="callout-box">
+          <div class="callout-label">Concept clé</div>
+          <p>Ces mains sont "bien déguisées" — l'adversaire ne voit pas venir votre quinte ou couleur.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-muted">⚪</div>
+        <div class="pdr-block-title">Mains Marginales à Éviter</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <p style="font-family:'DM Mono',monospace; color:var(--text-muted); font-size:14px;">KJo · QTo · J9o · basses dépareillées</p>
+        <p>Paraissent jouables mais souvent dominées. KJo perd contre AJ, KQ, KK, AA. Hors position face à un raise = erreur fréquente des débutants.</p>
+        <div class="gold-box">
+          <div class="gold-label">Rappel</div>
+          <p>Le fold est gratuit. Ne pas folder ces mains coûte très cher sur le long terme.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="pdr-block" onclick="toggleBlock(this)">
+      <div class="pdr-block-header">
+        <div class="pdr-block-icon icon-gold">♠</div>
+        <div class="pdr-block-title">Suited vs Offsuit</div>
+        <div class="pdr-block-arrow">›</div>
+      </div>
+      <div class="pdr-block-body">
+        <p>Le "s" (suited) ajoute environ <strong>+2 à 4% d'equity</strong> grâce au potentiel de couleur (flush).</p>
+        <ul>
+          <li>AKs vs AA = 12.7% d'equity</li>
+          <li>AKo vs AA = 9.5% d'equity</li>
+          <li>76s vs AA = 22.1% · 76o vs AA = 18.0%</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FLASHCARDS VIEW -->
+<div class="view" id="view-fc">
+  <div class="fc-filter" id="fcFilter">
+    <button class="fc-filter-btn active" onclick="setFCFilter('Tout', this)">Tout</button>
+    <button class="fc-filter-btn" onclick="setFCFilter('Position', this)">Position</button>
+    <button class="fc-filter-btn" onclick="setFCFilter('Mains', this)">Mains</button>
+    <button class="fc-filter-btn" onclick="setFCFilter('Préflop', this)">Préflop</button>
+    <button class="fc-filter-btn" onclick="setFCFilter('Concepts', this)">Concepts</button>
+    <button class="fc-filter-btn" onclick="setFCFilter('Erreurs', this)">Erreurs</button>
+  </div>
+  <div class="fc-progress">
+    <span id="fcCounter">1 / 15</span>
+    <span id="fcPct">0% vu</span>
+  </div>
+  <div class="fc-progress-bar">
+    <div class="fc-progress-fill" id="fcFill" style="width:6.6%"></div>
+  </div>
+  <div class="fc-card" id="fcCard" onclick="flipCard()">
+    <div class="fc-cat-badge" id="fcBadge"></div>
+    <div class="fc-question" id="fcQuestion"></div>
+    <div class="fc-answer" id="fcAnswer"></div>
+  </div>
+  <div class="fc-hint" id="fcHint">TOUCHER POUR RÉVÉLER</div>
+  <div class="fc-nav">
+    <button class="fc-nav-btn" onclick="fcPrev()">←</button>
+    <button class="fc-next-btn" onclick="fcNext()">SUIVANTE →</button>
+  </div>
+</div>
+
+<!-- QUIZ VIEW -->
+<div class="view" id="view-quiz">
+  <div class="quiz-header">
+    <div>
+      <div class="quiz-score-display" id="quizScoreDisplay">0/5</div>
+      <div class="quiz-score-lbl">SCORE SESSION 01</div>
+    </div>
+    <div style="flex:1; margin-left:16px;">
+      <div class="fc-progress-bar" style="margin-bottom:6px;">
+        <div class="fc-progress-fill" id="quizFill" style="width:0%"></div>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace;">PROGRESSION</div>
+    </div>
+  </div>
+  <div id="quizList"></div>
+</div>
+
+<!-- TRACKER VIEW -->
+<div class="view" id="view-tracker">
+  <div class="tracker-summary">
+    <div class="tracker-stat">
+      <div class="tracker-stat-val" id="tStatSessions">0</div>
+      <div class="tracker-stat-lbl">Sessions</div>
+    </div>
+    <div class="tracker-stat">
+      <div class="tracker-stat-val" id="tStatHeures">0h</div>
+      <div class="tracker-stat-lbl">Heures totales</div>
+    </div>
+    <div class="tracker-stat">
+      <div class="tracker-stat-val" id="tStatMoyenne">—</div>
+      <div class="tracker-stat-lbl">Note moyenne</div>
+    </div>
+    <div class="tracker-stat">
+      <div class="tracker-stat-val" id="tStatStreak">0🔥</div>
+      <div class="tracker-stat-lbl">Série actuelle</div>
+    </div>
+  </div>
+  <button class="add-session-btn" onclick="openModal()">+ Enregistrer une session</button>
+  <div class="section-title">Historique</div>
+  <div id="sessionLog"></div>
+</div>
+
+<!-- SCENARIOS VIEW -->
+<div class="view" id="view-scenarios">
+  <div style="background:linear-gradient(135deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;">
+    <div style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;">Simulation · Mains aléatoires</div>
+    <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;">Que ferais-tu ?</div>
+    <div style="font-size:14px;color:var(--text-dim);font-style:italic;">Un scénario réel, 3 choix, une explication.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;">
+      <span style="font-size:11px;font-family:'DM Mono',monospace;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);" id="scScore">Score : 0/0</span>
+      <span style="font-size:11px;font-family:'DM Mono',monospace;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);" id="scNum">Scénario 1/20</span>
+    </div>
+  </div>
+
+  <!-- SCENARIO CARD -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;" id="scCard">
+    <!-- Table visual -->
+    <div style="display:flex;justify-content:center;gap:6px;margin-bottom:16px;flex-wrap:wrap;" id="scPositions"></div>
+    <!-- Hand -->
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;margin-bottom:8px;">TA MAIN</div>
+      <div style="display:flex;justify-content:center;gap:10px;" id="scHand"></div>
+    </div>
+    <!-- Situation -->
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">SITUATION</div>
+      <div style="font-size:14px;color:var(--text-dim);line-height:1.7;" id="scSituation"></div>
+    </div>
+    <!-- Choices -->
+    <div style="display:flex;flex-direction:column;gap:8px;" id="scChoices"></div>
+  </div>
+
+  <!-- EXPLANATION (hidden until answered) -->
+  <div style="display:none;background:#0d1f0d;border:1px solid rgba(78,207,122,0.2);border-radius:14px;padding:20px;margin-bottom:12px;" id="scExplanation">
+    <div style="font-size:10px;font-family:'DM Mono',monospace;color:#4ecf7a;letter-spacing:2px;margin-bottom:10px;">EXPLICATION</div>
+    <div style="font-size:14px;color:#a0e8bc;line-height:1.75;" id="scExplText"></div>
+  </div>
+
+  <!-- NEXT BUTTON -->
+  <button onclick="nextScenario()" id="scNextBtn" style="display:none;width:100%;background:var(--gold);border:none;border-radius:12px;color:var(--bg);font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:1px;padding:14px;cursor:pointer;">Scénario suivant →</button>
+  <button onclick="shuffleScenario()" style="width:100%;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1px;padding:12px;cursor:pointer;margin-top:8px;">🔀 Aléatoire</button>
+</div>
+
+<!-- POKER TABLE VIEW -->
+<div class="view" id="view-table" style="padding:0;">
+  <div style="padding:16px 16px 0;">
+    <div style="background:linear-gradient(135deg,#16152a,#111020);border:1px solid #252440;border-radius:14px;padding:18px;margin-bottom:14px;">
+      <div style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:3px;color:#d4a843;text-transform:uppercase;margin-bottom:6px;">Table IA</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">Jouer contre des IA</div>
+      <div style="font-size:13px;color:#8886aa;font-style:italic;">Configure ta table et entraîne-toi contre différents profils.</div>
+    </div>
+
+    <!-- CONFIG -->
+    <div id="tableConfig" style="display:block;">
+      <!-- Profils IA -->
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:#4a4868;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Profil des adversaires</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;" id="profileGrid">
+        <div class="profile-btn active" id="prof-fish" onclick="selectProfile('fish',this)">
+          <div style="font-size:18px;margin-bottom:4px;">🐟</div>
+          <div style="font-size:12px;font-weight:600;color:#e8e6f5;">Fish</div>
+          <div style="font-size:11px;color:#4a4868;">Call tout, bluff peu</div>
+        </div>
+        <div class="profile-btn" id="prof-nit" onclick="selectProfile('nit',this)">
+          <div style="font-size:18px;margin-bottom:4px;">🧊</div>
+          <div style="font-size:12px;font-weight:600;color:#e8e6f5;">Nit (Tight)</div>
+          <div style="font-size:11px;color:#4a4868;">Fold souvent, mains premium only</div>
+        </div>
+        <div class="profile-btn" id="prof-calling" onclick="selectProfile('calling',this)">
+          <div style="font-size:18px;margin-bottom:4px;">📞</div>
+          <div style="font-size:12px;font-weight:600;color:#e8e6f5;">Calling Station</div>
+          <div style="font-size:11px;color:#4a4868;">Appelle tout, ne fold jamais</div>
+        </div>
+        <div class="profile-btn" id="prof-lag" onclick="selectProfile('lag',this)">
+          <div style="font-size:18px;margin-bottom:4px;">🔥</div>
+          <div style="font-size:12px;font-weight:600;color:#e8e6f5;">LAG</div>
+          <div style="font-size:11px;color:#4a4868;">Agressif, relance souvent</div>
+        </div>
+      </div>
+
+      <!-- Stack -->
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:#4a4868;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Stack de départ</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="stack-btn active" onclick="selectStack(50,this)">50 BB</button>
+        <button class="stack-btn" onclick="selectStack(100,this)">100 BB</button>
+        <button class="stack-btn" onclick="selectStack(200,this)">200 BB</button>
+      </div>
+
+      <!-- Blinds -->
+      <div style="font-size:11px;font-family:'DM Mono',monospace;color:#4a4868;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Blinds</div>
+      <div style="display:flex;gap:8px;margin-bottom:20px;">
+        <button class="blinds-btn active" onclick="selectBlinds(1,2,this)">SB 1 / BB 2</button>
+        <button class="blinds-btn" onclick="selectBlinds(2,4,this)">SB 2 / BB 4</button>
+        <button class="blinds-btn" onclick="selectBlinds(5,10,this)">SB 5 / BB 10</button>
+      </div>
+
+      <button onclick="startTable()" style="width:100%;background:#d4a843;border:none;border-radius:12px;color:#0a0910;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;letter-spacing:1px;padding:16px;cursor:pointer;">
+        ♠ Démarrer la table
+      </button>
+    </div>
+
+    <!-- GAME -->
+    <div id="tableGame" style="display:none;">
+      <!-- Info bar -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:#4a4868;">
+          POT: <span id="potDisplay" style="color:#d4a843;font-weight:700;">0 BB</span>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:#4a4868;">
+          STACK: <span id="stackDisplay" style="color:#3ecfca;font-weight:700;">100 BB</span>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:#4a4868;" id="stageDisplay">PRÉ-FLOP</div>
+      </div>
+
+      <!-- IA info -->
+      <div style="background:#16152a;border:1px solid #252440;border-radius:10px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;" id="iaEmoji">🐟</div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:#e8e6f5;" id="iaName">Fish</div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:#4a4868;">Stack IA: <span id="iaStack" style="color:#d4a843;">100 BB</span></div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-size:11px;color:#4a4868;font-family:'DM Mono',monospace;">IA ACTION</div>
+          <div style="font-size:13px;color:#3ecfca;font-family:'DM Mono',monospace;" id="iaAction">—</div>
+        </div>
+      </div>
+
+      <!-- Board -->
+      <div style="background:#0d2010;border:1px solid #1a4020;border-radius:10px;padding:12px;margin-bottom:12px;text-align:center;">
+        <div style="font-size:10px;font-family:'DM Mono',monospace;color:#4a4868;letter-spacing:2px;margin-bottom:8px;">BOARD</div>
+        <div style="display:flex;justify-content:center;gap:6px;" id="boardCards">
+          <div style="background:#16152a;border:1px solid #252440;border-radius:8px;width:40px;height:52px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#4a4868;">?</div>
+          <div style="background:#16152a;border:1px solid #252440;border-radius:8px;width:40px;height:52px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#4a4868;">?</div>
+          <div style="background:#16152a;border:1px solid #252440;border-radius:8px;width:40px;height:52px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#4a4868;">?</div>
+          <div style="background:#16152a;border:1px solid #252440;border-radius:8px;width:40px;height:52px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#4a4868;">?</div>
+          <div style="background:#16152a;border:1px solid #252440;border-radius:8px;width:40px;height:52px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#4a4868;">?</div>
+        </div>
+      </div>
+
+      <!-- Player hand -->
+      <div style="background:#16152a;border:1px solid #252440;border-radius:10px;padding:12px;margin-bottom:12px;text-align:center;">
+        <div style="font-size:10px;font-family:'DM Mono',monospace;color:#4a4868;letter-spacing:2px;margin-bottom:8px;">TA MAIN · <span id="playerPos" style="color:#d4a843;">BTN</span></div>
+        <div style="display:flex;justify-content:center;gap:10px;" id="playerHand"></div>
+      </div>
+
+      <!-- Message -->
+      <div style="background:#111020;border:1px solid #252440;border-radius:10px;padding:12px;margin-bottom:12px;min-height:50px;">
+        <div style="font-size:13px;color:#8886aa;line-height:1.6;" id="gameMessage">La partie commence...</div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;" id="actionBtns"></div>
+
+      <!-- New hand -->
+      <button onclick="newHand()" id="newHandBtn" style="display:none;width:100%;background:#16152a;border:1px solid #252440;border-radius:10px;color:#8886aa;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1px;padding:12px;cursor:pointer;">
+        ↻ Nouvelle main
+      </button>
+      <button onclick="resetTable()" style="width:100%;background:transparent;border:1px solid #252440;border-radius:10px;color:#4a4868;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;padding:10px;cursor:pointer;margin-top:6px;">
+        ← Changer de config
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- RANGES VIEW -->
+<div class="view" id="view-ranges" style="padding:16px 16px 40px;">
+  <div style="background:linear-gradient(135deg,#16152a,#111020);border:1px solid #252440;border-radius:14px;padding:18px;margin-bottom:16px;">
+    <div style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:3px;color:#d4a843;text-transform:uppercase;margin-bottom:6px;">Ranges pré-flop</div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:#fff;margin-bottom:4px;">Tableaux de ranges</div>
+    <div style="font-size:13px;color:#8886aa;font-style:italic;">Sélectionne ta position pour voir les mains à jouer.</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;">
+    <button onclick="selectRange('UTG',this)" class="range-pos-btn range-pos-active">UTG</button>
+    <button onclick="selectRange('UTG1',this)" class="range-pos-btn">UTG+1</button>
+    <button onclick="selectRange('HJ',this)" class="range-pos-btn">HJ</button>
+    <button onclick="selectRange('CO',this)" class="range-pos-btn">CO</button>
+    <button onclick="selectRange('BTN',this)" class="range-pos-btn">BTN</button>
+    <button onclick="selectRange('SB',this)" class="range-pos-btn">SB</button>
+    <button onclick="selectRange('BB',this)" class="range-pos-btn">BB</button>
+    <button onclick="selectRange('UTG2',this)" class="range-pos-btn">UTG+2</button>
+  </div>
+  <div style="background:#16152a;border:1px solid #252440;border-radius:12px;padding:14px;margin-bottom:14px;">
+    <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:#d4a843;margin-bottom:2px;" id="rangePosName">UTG</div>
+    <div style="font-size:11px;color:#4a4868;font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:8px;" id="rangePosSubtitle">UNDER THE GUN · 8 JOUEURS DERRIÈRE</div>
+    <div style="font-size:13px;color:#8886aa;line-height:1.6;" id="rangePosDesc">Range la plus serrée de la table. Seulement les mains très fortes.</div>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8886aa;font-family:'DM Mono',monospace;"><div style="width:12px;height:12px;border-radius:3px;background:#2a1a0a;border:1px solid #d4a843;"></div>Open Raise</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8886aa;font-family:'DM Mono',monospace;"><div style="width:12px;height:12px;border-radius:3px;background:#1f0a0a;border:1px solid #e84545;"></div>3-Bet</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8886aa;font-family:'DM Mono',monospace;"><div style="width:12px;height:12px;border-radius:3px;background:#0a1f2a;border:1px solid #3ecfca;"></div>Call</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8886aa;font-family:'DM Mono',monospace;"><div style="width:12px;height:12px;border-radius:3px;background:#141223;border:1px solid #252440;"></div>Fold</div>
+  </div>
+  <div id="mainRangeGrid" style="display:grid;grid-template-columns:repeat(13,1fr);gap:2px;margin-bottom:14px;"></div>
+  <div id="mainHandDetail" style="display:none;background:#16152a;border:1px solid #252440;border-radius:10px;padding:14px;margin-bottom:14px;">
+    <div style="font-family:'DM Mono',monospace;font-size:20px;font-weight:700;margin-bottom:4px;" id="mhdHand"></div>
+    <div style="font-size:13px;color:#8886aa;line-height:1.6;" id="mhdAction"></div>
+  </div>
+  <div style="background:#16152a;border:1px solid #252440;border-radius:12px;padding:16px;">
+    <div style="font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;color:#d4a843;text-transform:uppercase;margin-bottom:12px;" id="rangeRulesTitle">Règles — UTG</div>
+    <div id="rangeRules"></div>
+  </div>
+</div>
+```
+
+  </div><!-- end scroll-area -->
+
+  <!-- BOTTOM NAV -->
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="switchView('home', this)">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Accueil</span>
+    </button>
+    <button class="nav-btn" onclick="switchView('fc', this)">
+      <span class="nav-icon">🃏</span>
+      <span class="nav-label">Flashcards</span>
+    </button>
+    <button class="nav-btn" onclick="switchView('table', this)">
+      <span class="nav-icon">♠</span>
+      <span class="nav-label">Table IA</span>
+    </button>
+    <button class="nav-btn" onclick="switchView('ranges', this)">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Ranges</span>
+    </button>
+    <button class="nav-btn" onclick="switchView('tracker', this)">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Tracker</span>
+    </button>
+  </nav>
+
+</div><!-- end app -->
+
+<!-- MODAL -->
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Nouvelle session</div>
+    <div class="modal-field">
+      <label class="modal-label">Session étudiée</label>
+      <select class="modal-select" id="modalSession">
+        <option>01 — Les mains, la position et la sélection</option>
+        <option>02 — La mise et l'agressivité</option>
+        <option>03 — Lire le board</option>
+        <option>04 — Bluff et semi-bluff</option>
+        <option>05 — Pot odds et equity</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Durée (heures)</label>
+      <input class="modal-input" id="modalDuration" type="number" min="0.5" max="4" step="0.5" value="2">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label">Comment c'était ?</label>
+      <div class="modal-rating-btns" id="ratingBtns">
+        <button class="rating-btn" onclick="selectRating(this, '😐')">😐</button>
+        <button class="rating-btn selected" onclick="selectRating(this, '👍')">👍</button>
+        <button class="rating-btn" onclick="selectRating(this, '🔥')">🔥</button>
+      </div>
+    </div>
+    <button class="modal-save-btn" onclick="saveSession()">Enregistrer</button>
+    <button class="modal-cancel" onclick="closeModal()">Annuler</button>
+  </div>
+</div>
+
+<script>
+// ===== 50 FLASHCARDS =====
+const CARDS = [
+  {category:'Position',question:'Quelles sont les 9 positions dans l\'ordre ?',answer:'UTG → UTG+1 → UTG+2 → HJ → CO → BTN → SB → BB'},
+  {category:'Position',question:'Quelle est la meilleure position et pourquoi ?',answer:'BTN — tu agis en dernier post-flop sur tous les tours. Avantage informationnel maximal.'},
+  {category:'Position',question:'Que signifie jouer "en position" ?',answer:'Agir APRÈS tes adversaires. Tu vois leur action avant de décider — avantage énorme.'},
+  {category:'Position',question:'Règle d\'or de la position ?',answer:'"Position = pouvoir. Serrez hors position."'},
+  {category:'Position',question:'Pourquoi SB et BB sont désavantagés post-flop ?',answer:'Ils agissent en PREMIER post-flop malgré avoir payé les blinds. Double désavantage.'},
+  {category:'Position',question:'Depuis UTG, quel % de mains jouer environ ?',answer:'9–12% des mains. Seulement les très bonnes : AA, KK, QQ, JJ, AKs, AKo, AQs.'},
+  {category:'Position',question:'Depuis BTN, quel % de mains jouer environ ?',answer:'40–45% des mains quand ça fold jusqu\'à toi. Tu as l\'avantage de position maximale.'},
+  {category:'Position',question:'Qu\'est-ce que le "steal" depuis CO ou BTN ?',answer:'Relancer pour voler les blinds quand tout le monde a foldé avant toi. Très profitable.'},
+  {category:'Position',question:'Quelle position est appelée "la 2e meilleure" ?',answer:'Le CutOff (CO). Seulement BTN, SB et BB derrière — grande liberté d\'action.'},
+  {category:'Position',question:'Pourquoi UTG s\'appelle "Under The Gun" ?',answer:'Car tu agis en premier, sous pression — comme "sous le canon". Aucune info sur les autres.'},
+  {category:'Mains',question:'Quelles sont les 5 mains premium ?',answer:'AA, KK, QQ, JJ, AKs — toujours raise/3-bet depuis toute position.'},
+  {category:'Mains',question:'Qu\'est-ce qu\'un suited connector ?',answer:'Deux cartes consécutives de même couleur. Ex : 8♠7♠. Puissant pour quinte + couleur.'},
+  {category:'Mains',question:'Qu\'est-ce qu\'une main broadway ?',answer:'Composée de cartes T–A. Ex : KQ, KJ, QJ, AT. Fortes pour les grosses paires.'},
+  {category:'Mains',question:'VPIP cible en cash game ?',answer:'15–20%. Joue peu de mains, mais joue-les bien. Au-dessus de 25% = problème.'},
+  {category:'Mains',question:'Pourquoi les petites paires sont spéculatives ?',answer:'Elles jouent le set mining : chercher un brelan (~12% au flop). Besoin de stacks profonds.'},
+  {category:'Mains',question:'Quelle est l\'equity de AA contre une main aléatoire ?',answer:'Environ 85%. AA est favori massif contre n\'importe quelle main pré-flop.'},
+  {category:'Mains',question:'Pourquoi KJo est une "trap hand" ?',answer:'Elle semble forte mais est souvent dominée : AJ, KQ, KK, AA la battent toutes. Fold souvent.'},
+  {category:'Mains',question:'Qu\'apporte le "s" (suited) à une main ?',answer:'+2 à 4% d\'equity grâce au potentiel de flush. Ex : AKs = 12.7% vs AA, AKo = 9.5%.'},
+  {category:'Mains',question:'Qu\'est-ce que le "set mining" ?',answer:'Jouer une petite paire dans l\'espoir de toucher un brelan (set) au flop. Proba : ~12%.'},
+  {category:'Mains',question:'Pourquoi ne pas limper avec AA ?',answer:'On laisse les adversaires entrer à prix cassé. Il faut raise pour construire un gros pot.'},
+  {category:'Mains',question:'Qu\'est-ce qu\'une main "dominée" ?',answer:'Une main qui partage une carte avec une meilleure. Ex : AJ dominé par AK — même As, meilleur kicker.'},
+  {category:'Mains',question:'QQ est-elle toujours forte post-flop ?',answer:'Non. Sur un board A-high ou K-high avec action, QQ peut être derrière. Prudence requise.'},
+  {category:'Mains',question:'Différence AKs vs AKo en equity vs AA ?',answer:'AKs = 12.7% · AKo = 9.5%. Le "s" donne +3.2% grâce au potentiel flush.'},
+  {category:'Mains',question:'Les suited connectors sont-ils bons en heads-up ?',answer:'Moins que multi-way. Ils ont besoin de plusieurs adversaires pour rentabiliser leurs tirages.'},
+  {category:'Mains',question:'Qu\'est-ce qu\'une "nut hand" ?',answer:'La meilleure main possible étant donné le board. Ex : A♥K♥ sur J♥Q♥T♥ = nut flush.'},
+  {category:'Préflop',question:'Qu\'est-ce qu\'un 3-bet ?',answer:'Relancer un open raise. Ex : UTG ouvre → tu re-relances → c\'est un 3-bet.'},
+  {category:'Préflop',question:'Qu\'est-ce qu\'un open raise ?',answer:'Être le premier à relancer. La stratégie pré-flop correcte par défaut — ne jamais limper.'},
+  {category:'Préflop',question:'Que faire avec AKo depuis UTG ?',answer:'Open raise toujours. C\'est une main premium — ne jamais limper avec AK.'},
+  {category:'Préflop',question:'Que faire avec JJ face à un 3-bet UTG ?',answer:'Généralement call. UTG 3-bet = range très serrée (AA,KK,QQ,AK). JJ est derrière la plupart.'},
+  {category:'Préflop',question:'Qu\'est-ce qu\'un 4-bet ?',answer:'Relancer un 3-bet. Montre une main extrêmement forte (AA,KK) ou un bluff ciblé.'},
+  {category:'Préflop',question:'Qu\'est-ce qu\'un "squeeze" ?',answer:'Un 3-bet après un open raise ET un ou plusieurs calls. Très puissant — la range défensive est large.'},
+  {category:'Préflop',question:'Taille standard d\'un open raise en cash game ?',answer:'2.5x BB en position (BTN, CO). 3x hors position (UTG, SB). Ajuste selon la table.'},
+  {category:'Préflop',question:'Qu\'est-ce que le "cold call" ?',answer:'Appeler un raise sans avoir mis de mise avant. Ex : UTG raise, tu appelles = cold call.'},
+  {category:'Préflop',question:'Faut-il défendre le BB face à tout raise ?',answer:'Non. Face à un gros raise (4BB+), resserrer. Face à un min-raise (2BB), défendre plus large.'},
+  {category:'Préflop',question:'Qu\'est-ce que la "range advantage" ?',answer:'Avoir statistiquement de meilleures mains que l\'adversaire dans un spot donné.'},
+  {category:'Préflop',question:'Quand faire un 3-bet bluff ?',answer:'Avec des mains comme A5s, 76s — elles bloquent des bonnes mains adverses et ont du potentiel.'},
+  {category:'Concepts',question:'Qu\'est-ce que l\'equity ?',answer:'Ta part du pot si la main allait jusqu\'au showdown. AA a 85% d\'equity vs une main aléatoire.'},
+  {category:'Concepts',question:'Qu\'est-ce que le pot odds ?',answer:'Le ratio entre ce que tu dois appeler et la taille du pot. Ex : pot 100, call 25 → tu dois gagner 20%.'},
+  {category:'Concepts',question:'Qu\'est-ce que les implied odds ?',answer:'L\'argent que tu peux gagner sur les tours futurs si tu complètes ta main. Crucial pour les SC.'},
+  {category:'Concepts',question:'Qu\'est-ce qu\'un "out" ?',answer:'Une carte qui améliore ta main. Tirage couleur = 9 outs. Tirage quinte ouverte = 8 outs.'},
+  {category:'Concepts',question:'Règle des 2 et 4 pour les outs ?',answer:'Multiplie tes outs par 2 avec une carte à venir, par 4 avec deux cartes à venir.'},
+  {category:'Concepts',question:'Qu\'est-ce qu\'un "value bet" ?',answer:'Miser avec la meilleure main pour extraire de la valeur des mains plus faibles adverses.'},
+  {category:'Concepts',question:'Qu\'est-ce que le VPIP ?',answer:'Voluntarily Put money In Pot. % des mains où tu mises volontairement. Cible : 15–20%.'},
+  {category:'Concepts',question:'Qu\'est-ce que le PFR (Pre-Flop Raise) ?',answer:'% des mains où tu raises pré-flop. Un bon joueur a PFR proche de son VPIP — il raise plus qu\'il ne call.'},
+  {category:'Erreurs',question:'Erreur n°1 des débutants pré-flop ?',answer:'Jouer trop de mains (VPIP > 30%). La sélection des mains est la base de tout.'},
+  {category:'Erreurs',question:'Pourquoi limper est souvent une erreur ?',answer:'On donne aux adversaires de bonnes cotes pour entrer. Le raise contrôle le pot et la narration.'},
+  {category:'Erreurs',question:'Pourquoi slow-play AA est risqué ?',answer:'On laisse des mains adverses réaliser leur equity. Mieux vaut construire un gros pot directement.'},
+  {category:'Erreurs',question:'Erreur fréquente avec QQ face à un 4-bet all-in ?',answer:'Call sans réfléchir. QQ est souvent derrière AA et KK. Analyser le profil adverse avant de call.'},
+  {category:'Erreurs',question:'Pourquoi jouer KJo hors position est une erreur ?',answer:'KJo est dominé par AJ, KQ, KK, AA. Hors position, on ne peut pas contrôler le pot. Fold souvent.'},
+  {category:'Erreurs',question:'Qu\'est-ce que le "tilt" ?',answer:'Jouer émotionnellement après une mauvaise séquence. Les décisions deviennent irrationnelles. Pause obligatoire.'},
+];
+
+// ===== 20 SCENARIOS =====
+const SCENARIOS = [
+  {pos:'UTG',hand:['A♠','A♥'],situation:'Tu es UTG avec AA. Tu open raise à 3BB. Le BTN te 3-bet à 9BB. Tout le monde fold. Action sur toi.',choices:['Fold','Call','4-bet à 22BB'],correct:2,explanation:'4-bet est la bonne action avec AA. C\'est la meilleure main possible — tu veux construire le pot maximum. Un call est acceptable pour "trapper", mais le 4-bet est plus profitable car il construit le pot et peut forcer l\'adversaire à 5-bet all-in avec KK ou AK.'},
+  {pos:'UTG',hand:['A♣','A♦'],situation:'Tu es UTG avec AA. Tu open raise 3BB. Le CO 3-bet à 9BB, le BTN cold call. Action sur toi.',choices:['Fold','Call','4-bet à 28BB'],correct:2,explanation:'4-bet toujours avec AA même multi-way. Avec deux adversaires, AA perd de l\'equity. Le 4-bet force des décisions difficiles et réduit le field. Call est aussi possible pour trapper mais le 4-bet est généralement supérieur.'},
+  {pos:'BTN',hand:['K♠','Q♠'],situation:'Tu es BTN avec KQs. CO open raise à 2.5BB. Action sur toi.',choices:['Fold','Call','3-bet à 8BB'],correct:2,explanation:'KQs est assez forte depuis BTN pour 3-bet. Tu as la position, une bonne main, et tu peux représenter une range forte. Call est aussi correct — KQs joue très bien en position. Le fold serait une erreur, c\'est trop forte depuis BTN.'},
+  {pos:'CO',hand:['7♥','6♥'],situation:'Tu es CO avec 76s. UTG open raise à 3BB. HJ call. Action sur toi.',choices:['Fold','Call','3-bet à 12BB'],correct:1,explanation:'Call est correct ici. 76s est un suited connector parfait pour jouer multi-way — UTG et HJ ont déjà callé. Tu auras des implied odds énormes si tu touches une quinte ou couleur. Le 3-bet serait une erreur : ta main a besoin de callers et de cotes implicites, pas d\'isoler.'},
+  {pos:'BB',hand:['K♣','J♦'],situation:'Tu es BB avec KJo. CO open raise à 2.5BB. Tout le monde fold jusqu\'à toi.',choices:['Fold','Call','3-bet à 8BB'],correct:1,explanation:'Call est correct. Tu as déjà 1BB investie donc tu as une meilleure cote. KJo est assez forte pour défendre le BB face à un CO raise. Le 3-bet serait trop ambitieux — KJo est souvent dominée par AK, AJ, KQ qui 4-betteraient. Fold serait trop tight ici.'},
+  {pos:'SB',hand:['Q♦','Q♣'],situation:'Tu es SB avec QQ. BTN open raise à 2.5BB. Action sur toi.',choices:['Fold','Call','3-bet à 8BB'],correct:2,explanation:'3-bet toujours avec QQ. C\'est une main premium. En 3-bettant, tu construis le pot, tu forces BB à décider, et tu prends l\'initiative. Un call laisse BB entrer facilement et tu perds ton avantage. Fold serait une grave erreur.'},
+  {pos:'HJ',hand:['A♣','K♥'],situation:'Tu es HJ avec AKo. Tu open raise à 3BB. Le BTN 3-bet à 9BB. Le SB 4-bet all-in à 80BB. Action sur toi.',choices:['Fold','Call all-in','Re-raise (pas de sens ici)'],correct:1,explanation:'Call all-in avec AKo. Tu as ~45% d\'equity vs AA ou KK. Tu es dans une "flip situation" au mieux. AKo est trop fort pour folder ici — si le SB peut avoir autre chose que AA/KK (AQs, QQ), c\'est un call clair.'},
+  {pos:'UTG',hand:['J♠','T♠'],situation:'Tu es UTG avec JTs. Action sur toi en premier.',choices:['Fold','Open raise à 3BB','Limper (appeler BB)'],correct:0,explanation:'Fold depuis UTG avec JTs. C\'est une main spéculative qui a besoin de position et d\'implied odds. Depuis UTG tu seras souvent hors position post-flop. Limper est aussi une erreur. JTs est profitable depuis CO ou BTN, pas depuis UTG.'},
+  {pos:'BTN',hand:['2♣','2♦'],situation:'Tu es BTN avec 22. UTG open raise à 3BB. HJ call. CO call. Action sur toi. Stacks à 100BB.',choices:['Fold','Call — set mining','3-bet à 14BB'],correct:1,explanation:'Call parfait pour le set mining. Tu as 3 adversaires dans le pot = implied odds énormes. Les stacks sont profonds (100BB). Si tu touches un set au flop (~12%), tu peux gagner énormément. Le 3-bet est une erreur — tu veux multi-way avec 22, pas heads-up.'},
+  {pos:'CO',hand:['A♠','5♠'],situation:'Tu es CO avec A5s. Tout le monde fold jusqu\'à toi.',choices:['Fold','Open raise à 2.5BB','Limper'],correct:1,explanation:'Open raise avec A5s depuis CO. C\'est une main avec double potentiel : paire d\'As avec kicker, et tirage couleur (nut flush si ça sort). Depuis CO avec seulement BTN, SB, BB derrière, c\'est un open raise standard. Limper = erreur.'},
+  {pos:'BB',hand:['7♠','2♣'],situation:'Tu es BB avec 72o (la pire main au poker). BTN open raise à 2.5BB. SB fold. Action sur toi.',choices:['Fold','Call','3-bet bluff'],correct:0,explanation:'Fold clairement. 72o est la pire main possible — pas de valeur, pas de tirage, pas de potentiel. Même avec une bonne cote, cette main ne peut pas profitablement défendre. Le 3-bet bluff serait suicidaire. Parfois on fold simplement.'},
+  {pos:'UTG',hand:['K♥','K♦'],situation:'Tu es UTG avec KK. Tu open raise 3BB. CO 3-bet à 9BB. BTN cold call le 3-bet. Action sur toi.',choices:['Fold','Call','4-bet à 28BB'],correct:2,explanation:'4-bet avec KK même multi-way. KK est la 2e meilleure main pré-flop. Le 4-bet isole le CO et force BTN à folder (il a cold callé donc range limitée). La seule main qui domine KK est AA — si CO a AA, pas grand chose à faire, mais le 4-bet est quand même correct.'},
+  {pos:'BTN',hand:['9♥','9♠'],situation:'Tu es BTN avec 99. UTG open raise à 3BB. Action sur toi.',choices:['Fold','Call','3-bet à 9BB'],correct:2,explanation:'Les deux actions (call et 3-bet) sont correctes avec 99 depuis BTN. Le 3-bet est légèrement préférable car tu as la position et tu peux prendre l\'initiative. Call est aussi bon pour jouer multi-way et chercher un set. Fold serait une erreur — 99 est trop forte pour ça.'},
+  {pos:'SB',hand:['A♦','2♦'],situation:'Tu es SB avec A2s. BTN open raise à 2.5BB. Action sur toi.',choices:['Fold','Call','3-bet à 8BB'],correct:2,explanation:'3-bet bluff/valeur avec A2s depuis SB ! A2s est parfaite pour 3-bet car : elle bloque AA et AK adverses (tu as un As), elle a du potentiel de flush, et tu peux représenter une range forte. Call est moins bon car tu seras hors position post-flop.'},
+  {pos:'CO',hand:['Q♠','J♠'],situation:'Tu es CO avec QJs. UTG open raise à 3BB. HJ fold. Action sur toi.',choices:['Fold','Call','3-bet à 9BB'],correct:1,explanation:'Call correct avec QJs. C\'est une main spéculative forte — suited, connectée, avec potentiel de flush et quinte. Depuis CO en position sur UTG, le call est très profitable. Le 3-bet serait trop large face à un UTG raise — QJs est souvent dominée par la range UTG.'},
+  {pos:'BTN',hand:['T♥','9♥'],situation:'Tu es BTN avec T9s. CO open raise à 2.5BB. Action sur toi.',choices:['Fold','Call','3-bet à 8BB'],correct:1,explanation:'Call avec T9s depuis BTN. Tu es en position, la main est spéculative mais forte. Tu cherches un flop favorable pour faire une quinte, couleur, ou deux paires. Le 3-bet est possible mais T9s joue mieux en call multi-way pour réaliser son équité de drawing.'},
+  {pos:'UTG',hand:['Q♣','Q♦'],situation:'Tu es UTG avec QQ. Tu open raise 3BB. Le BTN 3-bet à 9BB. Le SB 4-bet à 27BB. Action sur toi.',choices:['Fold','Call','5-bet all-in'],correct:1,explanation:'Call ou fold sont les deux options viables. QQ face à un 4-bet de SB (la pire position, donc range très serrée) est dans une position difficile. SB 4-bet = souvent AA ou KK. Call pour voir le flop et évaluer est raisonnable. 5-bet all-in serait risqué — si SB a AA ou KK tu perds tout.'},
+  {pos:'HJ',hand:['8♦','8♣'],situation:'Tu es HJ avec 88. Tout le monde fold jusqu\'à toi. Stacks 100BB.',choices:['Fold','Open raise à 3BB','Limper'],correct:1,explanation:'Open raise avec 88 depuis HJ. C\'est une bonne main — paire moyenne qui peut gagner de la valeur. Tu peux construire un pot et potentiellement toucher un set au flop. Limper = erreur. Fold = trop tight.'},
+  {pos:'BB',hand:['J♦','T♣'],situation:'Tu es BB avec JTo. BTN open raise à 2BB (min-raise). SB fold. Action sur toi.',choices:['Fold','Call','3-bet à 7BB'],correct:1,explanation:'Call avec JTo face à un min-raise depuis BB. La cote est excellente (tu dois ajouter 1BB pour un pot de 4BB = 4:1). JTo a suffisamment de potentiel pour défendre. Le 3-bet est possible mais risqué hors position avec une main offsuit. Fold serait trop tight face à une si petite mise.'},
+  {pos:'CO',hand:['K♦','K♠'],situation:'Tu es CO avec KK. Tout le monde fold jusqu\'à toi. Action sur toi.',choices:['Limper pour trapper','Open raise à 2.5BB','Open raise à 5BB (gros pour protéger)'],correct:1,explanation:'Open raise standard à 2.5BB. KK est une main premium mais on ne change pas sa taille de mise selon sa main — ça serait trop lisible. Un raise standard avec KK est identique à celui avec 87s depuis CO. Limper = erreur majeure. Gros raise = trop lisible.'},
+];
+
+const QUIZ = [
+  {q:'Tu as JJ. UTG raise, BTN 3-bet. Que fais-tu ?',a:'JJ est premium mais vulnérable face à un 3-bet BTN (souvent AA, KK, QQ, AK). Call ou 4-bet selon ta lecture. Fold = erreur, JJ est trop fort.'},
+  {q:'Tu as 8♥7♥ en CO. UTG raise. Que fais-tu ?',a:'87s est spéculative. En CO avec stacks profonds et bonne cote implicite → call. Si le raise est énorme ou squeeze derrière → fold.'},
+  {q:'Quelle est la différence fondamentale entre AKs et AKo ?',a:'AKs a les deux cartes de même couleur (+3% equity via flush). AKo = offsuit. Les deux sont premium, mais AKs légèrement supérieur.'},
+  {q:'Pourquoi les petites paires (22–66) sont spéculatives ?',a:'Elles gagnent rarement avec une simple paire. Valeur = set mining (~12% au flop). Besoin de stacks profonds pour être profitables.'},
+  {q:'KJo : main forte ou marginale ? Pourquoi ?',a:'Marginale. Souvent dominée par KQ, KK, AA, AJ, AK. Hors position face à un raise → fold dans la plupart des situations.'},
+];
+
+// ===== STATE =====
+let currentView = 'home';
+let fcIndex = 0;
+let fcFilter = 'Tout';
+let fcFlipped = false;
+let fcSeen = new Set();
+let fcOrder = [];
+let quizScores = {};
+let selectedRating = '👍';
+let sessions = JSON.parse(localStorage.getItem('pokerSessions') || '[]');
+let scIndex = 0;
+let scOrder = [];
+let scAnswered = false;
+let scCorrect = 0;
+let scTotal = 0;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ===== NAVIGATION =====
+function switchView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const view = document.getElementById('view-' + name);
+  if (!view) return;
+  view.classList.add('active');
+  btn.classList.add('active');
+  document.querySelector('.scroll-area').scrollTop = 0;
+  currentView = name;
+  if (name === 'home') { updateSessionStatuses(); renderHomeStats(); }
+  if (name === 'fc') { if (!fcOrder.length) initFC(); renderFC(); }
+  if (name === 'tracker') renderTracker();
+  if (name === 'ranges') buildMainRangeGrid('UTG');
+  if (name === 'scenarios') { if (!scOrder.length) initScenarios(); renderScenario(); }
+}
+
+function goToPDR(idx) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-pdr').classList.add('active');
+  document.querySelectorAll('.nav-btn')[1].classList.add('active');
+  switchPDR(idx, document.querySelectorAll('.pdr-tab')[idx]);
+  document.querySelector('.scroll-area').scrollTop = 0;
+}
+
+// ===== PDR =====
+function switchPDR(idx, tab) {
+  document.querySelectorAll('.pdr-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pdr-content').forEach(c => c.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById('pdr-' + idx).classList.add('active');
+}
+
+function toggleBlock(block) {
+  block.classList.toggle('open');
+}
+
+// ===== FLASHCARDS =====
+function initFC() {
+  fcOrder = shuffle([...Array(CARDS.length).keys()]);
+  fcIndex = 0;
+  fcSeen = new Set();
+}
+
+function getFiltered() {
+  if (fcFilter === 'Tout') return fcOrder.map(i => ({...CARDS[i], origIndex: i}));
+  const filtered = [];
+  CARDS.forEach((c,i) => { if (c.category === fcFilter) filtered.push({...c, origIndex: i}); });
+  return shuffle(filtered);
+}
+
+function renderFC() {
+  const cards = getFiltered();
+  if (!cards.length) return;
+  const idx = fcIndex % cards.length;
+  const card = cards[idx];
+  const catClass = {Position:'cat-position',Mains:'cat-mains',Préflop:'cat-preflop',Concepts:'cat-concepts',Erreurs:'cat-erreurs'}[card.category] || 'cat-preflop';
+  document.getElementById('fcBadge').className = 'fc-cat-badge ' + catClass;
+  document.getElementById('fcBadge').textContent = card.category;
+  document.getElementById('fcQuestion').textContent = card.question;
+  document.getElementById('fcAnswer').textContent = card.answer;
+  const el = document.getElementById('fcCard');
+  el.classList.remove('revealed');
+  fcFlipped = false;
+  document.getElementById('fcHint').textContent = 'TOUCHER POUR RÉVÉLER';
+  document.getElementById('fcCounter').textContent = (idx+1) + ' / ' + cards.length;
+  document.getElementById('fcPct').textContent = Math.round((fcSeen.size/cards.length)*100) + '% vu';
+  document.getElementById('fcFill').style.width = ((idx+1)/cards.length*100) + '%';
+}
+
+function flipCard() {
+  const el = document.getElementById('fcCard');
+  if (!fcFlipped) {
+    el.classList.add('revealed');
+    fcFlipped = true;
+    document.getElementById('fcHint').textContent = 'TOUCHER POUR CACHER';
+    fcSeen.add(fcIndex);
+  } else {
+    el.classList.remove('revealed');
+    fcFlipped = false;
+    document.getElementById('fcHint').textContent = 'TOUCHER POUR RÉVÉLER';
+  }
+}
+
+function fcNext() {
+  fcSeen.add(fcIndex);
+  fcIndex = (fcIndex + 1) % getFiltered().length;
+  renderFC();
+}
+
+function fcPrev() {
+  fcIndex = (fcIndex - 1 + getFiltered().length) % getFiltered().length;
+  renderFC();
+}
+
+function setFCFilter(filter, btn) {
+  fcFilter = filter;
+  fcIndex = 0;
+  fcSeen = new Set();
+  document.querySelectorAll('.fc-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFC();
+}
+
+// ===== SCENARIOS =====
+function initScenarios() {
+  scOrder = shuffle([...Array(SCENARIOS.length).keys()]);
+  scIndex = 0;
+  scAnswered = false;
+}
+
+function renderScenario() {
+  const sc = SCENARIOS[scOrder[scIndex % scOrder.length]];
+  scAnswered = false;
+  document.getElementById('scNum').textContent = 'Scénario ' + (scIndex % SCENARIOS.length + 1) + '/20';
+  document.getElementById('scScore').textContent = 'Score : ' + scCorrect + '/' + scTotal;
+  document.getElementById('scExplanation').style.display = 'none';
+  document.getElementById('scNextBtn').style.display = 'none';
+
+  // Position badge
+  const posColors = {UTG:'#e84545',BTN:'#d4a843',CO:'#3ecfca',SB:'#8886aa',BB:'#8886aa',HJ:'#4ecf7a',SB:'#9b59b6'};
+  const col = posColors[sc.pos] || '#8886aa';
+  document.getElementById('scPositions').innerHTML = `
+    <div style="background:rgba(255,255,255,0.05);border:1px solid ${col}40;border-radius:8px;padding:6px 14px;font-family:'DM Mono',monospace;font-size:12px;color:${col};">
+      📍 ${sc.pos}
+    </div>
+  `;
+
+  // Hand cards
+  const suits = {'♠':'#a0cfff','♥':'#ff7070','♦':'#ff9f70','♣':'#70e070'};
+  document.getElementById('scHand').innerHTML = sc.hand.map(card => {
+    const suit = card.slice(-1);
+    const color = suits[suit] || '#fff';
+    return `<div style="background:#1d1c35;border:2px solid ${color}40;border-radius:10px;padding:12px 16px;font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:${color};min-width:56px;text-align:center;">${card}</div>`;
+  }).join('');
+
+  // Situation
+  document.getElementById('scSituation').textContent = sc.situation;
+
+  // Choices
+  const choiceColors = ['#e84545','#3ecfca','#d4a843'];
+  document.getElementById('scChoices').innerHTML = sc.choices.map((c,i) => `
+    <button onclick="answerScenario(${i})" style="background:rgba(255,255,255,0.03);border:1px solid #252440;border-radius:10px;padding:14px 16px;text-align:left;font-family:'DM Sans',sans-serif;font-size:14px;color:#e8e6f5;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s;">
+      <span style="width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid #252440;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;color:#4a4868;flex-shrink:0;">${['A','B','C'][i]}</span>
+      ${c}
+    </button>
+  `).join('');
+}
+
+function answerScenario(choice) {
+  if (scAnswered) return;
+  scAnswered = true;
+  scTotal++;
+  const sc = SCENARIOS[scOrder[scIndex % scOrder.length]];
+  const isCorrect = choice === sc.correct;
+  if (isCorrect) scCorrect++;
+
+  // Color the buttons
+  const btns = document.getElementById('scChoices').querySelectorAll('button');
+  btns.forEach((btn, i) => {
+    btn.style.pointerEvents = 'none';
+    if (i === sc.correct) {
+      btn.style.background = 'rgba(78,207,122,0.1)';
+      btn.style.borderColor = 'rgba(78,207,122,0.4)';
+      btn.style.color = '#4ecf7a';
+    } else if (i === choice && !isCorrect) {
+      btn.style.background = 'rgba(232,69,69,0.1)';
+      btn.style.borderColor = 'rgba(232,69,69,0.4)';
+      btn.style.color = '#e84545';
+    }
+  });
+
+  // Show explanation
+  document.getElementById('scExplanation').style.display = 'block';
+  document.getElementById('scExplText').textContent = (isCorrect ? '✅ Correct ! ' : '❌ Pas tout à fait. ') + sc.explanation;
+  document.getElementById('scNextBtn').style.display = 'block';
+  document.getElementById('scScore').textContent = 'Score : ' + scCorrect + '/' + scTotal;
+}
+
+function nextScenario() {
+  scIndex++;
+  if (scIndex >= scOrder.length) scOrder = shuffle([...Array(SCENARIOS.length).keys()]);
+  renderScenario();
+  document.querySelector('.scroll-area').scrollTop = 0;
+}
+
+function shuffleScenario() {
+  scOrder = shuffle([...Array(SCENARIOS.length).keys()]);
+  scIndex = 0;
+  renderScenario();
+}
+
+// ===== QUIZ =====
+function renderQuiz() {
+  const list = document.getElementById('quizList');
+  list.innerHTML = '';
+  let correct = Object.values(quizScores).filter(v => v === 'correct').length;
+  document.getElementById('quizScoreDisplay').textContent = correct + '/' + QUIZ.length;
+  document.getElementById('quizFill').style.width = (correct / QUIZ.length * 100) + '%';
+
+  QUIZ.forEach((q, i) => {
+    const state = quizScores[i];
+    const div = document.createElement('div');
+    div.className = 'quiz-q-block' + (state ? ' ' + state : '');
+    div.innerHTML = `
+      <div class="quiz-q-num">QUESTION ${String(i+1).padStart(2,'0')}</div>
+      <div class="quiz-question">${q.q}</div>
+      <button class="quiz-reveal-btn" onclick="revealQuiz(${i}, this)">Voir la réponse</button>
+      <div class="quiz-answer-box" id="qa-${i}">${q.a}</div>
+      ${state ? '' : `<div class="quiz-score-btns" id="qbtns-${i}" style="display:none">
+        <button class="quiz-correct-btn" onclick="scoreQuiz(${i},'correct')">✓ Correct</button>
+        <button class="quiz-wrong-btn" onclick="scoreQuiz(${i},'wrong')">✗ À revoir</button>
+      </div>`}
+    `;
+    list.appendChild(div);
+  });
+}
+
+function revealQuiz(i, btn) {
+  document.getElementById('qa-' + i).style.display = 'block';
+  btn.style.display = 'none';
+  const btns = document.getElementById('qbtns-' + i);
+  if (btns) btns.style.display = 'flex';
+}
+
+function scoreQuiz(i, result) {
+  quizScores[i] = result;
+  renderQuiz();
+}
+
+// ===== TRACKER =====
+function renderTracker() {
+  const total = sessions.length;
+  const hours = sessions.reduce((s, x) => s + parseFloat(x.duration), 0);
+  const ratings = sessions.map(s => s.rating);
+  const emoji = ratings.length ? (ratings.filter(r=>r==='🔥').length > ratings.length/2 ? '🔥' : ratings.filter(r=>r==='👍').length > 0 ? '👍' : '😐') : '—';
+  const streak = calcStreak();
+
+  document.getElementById('tStatSessions').textContent = total;
+  document.getElementById('tStatHeures').textContent = hours + 'h';
+  document.getElementById('tStatMoyenne').textContent = emoji;
+  document.getElementById('tStatStreak').textContent = streak + '🔥';
+  document.getElementById('statSessions').textContent = total;
+  document.getElementById('statHeures').textContent = hours + 'h';
+  document.getElementById('statProgression').textContent = Math.min(Math.round(total/10*100), 100) + '%';
+
+  const log = document.getElementById('sessionLog');
+  if (!sessions.length) {
+    log.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:32px;font-size:14px;font-style:italic;">Aucune session enregistrée.<br>Appuie sur le bouton ci-dessus pour commencer !</div>';
+    return;
+  }
+  log.innerHTML = [...sessions].reverse().map(s => `
+    <div class="session-log-item">
+      <div class="log-date">${s.date}</div>
+      <div class="log-info">
+        <div class="log-session-name">${s.session}</div>
+        <div class="log-duration">${s.duration}h étudié</div>
+      </div>
+      <div class="log-rating">${s.rating}</div>
+    </div>
+  `).join('');
+}
+
+function calcStreak() {
+  if (!sessions.length) return 0;
+  const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  let streak = 0;
+  const dates = [...new Set(sessions.map(s => s.date))].reverse();
+  for (let d of dates) { streak++; }
+  return Math.min(streak, 7);
+}
+
+function renderHomeStats() {
+  const total = sessions.length;
+  const hours = sessions.reduce((s, x) => s + parseFloat(x.duration), 0);
+  document.getElementById('statSessions').textContent = total;
+  document.getElementById('statHeures').textContent = hours + 'h';
+  document.getElementById('statProgression').textContent = Math.min(Math.round(total/10*100), 100) + '%';
+}
+
+// ===== MODAL =====
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+function selectRating(btn, rating) {
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedRating = rating;
+}
+function saveSession() {
+  const session = document.getElementById('modalSession').value;
+  const duration = document.getElementById('modalDuration').value;
+  const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  sessions.push({ session: session.substring(0,25)+'…', duration, rating: selectedRating, date });
+  localStorage.setItem('pokerSessions', JSON.stringify(sessions));
+  closeModal();
+  renderTracker();
+}
+
+const RANKS = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+
+const RANGE_DATA = {
+  UTG: {
+    name:'UTG', subtitle:'UNDER THE GUN · 8 JOUEURS DERRIÈRE',
+    desc:'Range la plus serrée. Seulement les mains très fortes : premium uniquement.',
+    rules:[
+      {icon:'✅',text:'<b>Open Raise :</b> AA, KK, QQ, JJ, TT, AKs, AKo, AQs, AJs, KQs'},
+      {icon:'🔴',text:'<b>3-Bet :</b> AA, KK, QQ face à un raise derrière'},
+      {icon:'❌',text:'<b>Fold tout le reste.</b> Même AQo, KJs sont marginaux depuis UTG.'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'r','TT':'r','99':'f','88':'f','77':'f','66':'f','55':'f','44':'f','33':'f','22':'f','AKs':'3','AQs':'r','AJs':'r','ATs':'f','A9s':'f','A8s':'f','A7s':'f','A6s':'f','A5s':'f','A4s':'f','A3s':'f','A2s':'f','AKo':'r','AQo':'f','AJo':'f','ATo':'f','A9o':'f','A8o':'f','A7o':'f','A6o':'f','A5o':'f','A4o':'f','A3o':'f','A2o':'f','KQs':'r','KJs':'f','KTs':'f','K9s':'f','K8s':'f','K7s':'f','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f','KQo':'f','KJo':'f','KTo':'f','K9o':'f','K8o':'f','K7o':'f','K6o':'f','K5o':'f','K4o':'f','K3o':'f','K2o':'f','QJs':'f','QTs':'f','Q9s':'f','Q8s':'f','Q7s':'f','Q6s':'f','Q5s':'f','Q4s':'f','Q3s':'f','Q2s':'f','QJo':'f','QTo':'f','Q9o':'f','JTs':'f','J9s':'f','J8s':'f','JTo':'f','T9s':'f','T8s':'f','98s':'f','87s':'f','76s':'f','65s':'f','54s':'f'}
+  },
+  UTG1: {
+    name:'UTG+1', subtitle:'UTG+1 · 7 JOUEURS DERRIÈRE',
+    desc:'Légèrement plus large qu\'UTG. Quelques mains supplémentaires autorisées.',
+    rules:[
+      {icon:'✅',text:'<b>Open Raise :</b> AA–TT, 99, AKs, AKo, AQs, AJs, ATs, KQs, QJs'},
+      {icon:'💡',text:'Ajoute 99, ATs, QJs vs UTG. Reste serré face aux joueurs agressifs derrière.'},
+      {icon:'❌',text:'Fold les suited connectors et les mains marginales.'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'r','TT':'r','99':'r','88':'f','77':'f','66':'f','55':'f','44':'f','33':'f','22':'f','AKs':'3','AQs':'r','AJs':'r','ATs':'r','A9s':'f','A8s':'f','A7s':'f','A6s':'f','A5s':'f','A4s':'f','A3s':'f','A2s':'f','AKo':'r','AQo':'f','AJo':'f','ATo':'f','A9o':'f','A8o':'f','A7o':'f','A6o':'f','A5o':'f','A4o':'f','A3o':'f','A2o':'f','KQs':'r','KJs':'f','KTs':'f','K9s':'f','K8s':'f','K7s':'f','K6s':'f','K5s':'f','K4s':'f','K3s':'f','K2s':'f','KQo':'f','KJo':'f','KTo':'f','QJs':'r','QTs':'f','Q9s':'f','JTs':'f','T9s':'f','98s':'f'}
+  },
+  UTG2: {
+    name:'UTG+2', subtitle:'UTG+2 · 6 JOUEURS DERRIÈRE',
+    desc:'Un peu plus de liberté. On commence à ajouter quelques suited connectors forts.',
+    rules:[
+      {icon:'✅',text:'<b>Open Raise :</b> AA–88, AXs (jusqu\'à A9s), KQs, KJs, QJs, JTs'},
+      {icon:'💡',text:'Les suited connectors (JTs) commencent à être profitables ici.'},
+      {icon:'❌',text:'Fold les mains offsuit moyennes et les petites paires (22–77).'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'r','TT':'r','99':'r','88':'r','77':'f','66':'f','55':'f','44':'f','33':'f','22':'f','AKs':'3','AQs':'r','AJs':'r','ATs':'r','A9s':'r','A8s':'f','A7s':'f','A6s':'f','A5s':'f','A4s':'f','A3s':'f','A2s':'f','AKo':'r','AQo':'r','AJo':'f','ATo':'f','A9o':'f','KQs':'r','KJs':'r','KTs':'f','K9s':'f','KQo':'r','KJo':'f','QJs':'r','QTs':'f','JTs':'r','J9s':'f','T9s':'f','98s':'f'}
+  },
+  HJ: {
+    name:'HJ', subtitle:'HIJACK · 4 JOUEURS DERRIÈRE',
+    desc:'Position intermédiaire. Range modérément large — environ 15% des mains.',
+    rules:[
+      {icon:'✅',text:'<b>Open Raise :</b> AA–77, AXs, KQs–KTs, QJs–Q9s, JTs, T9s, AKo–AJo, KQo'},
+      {icon:'💡',text:'Les suited connectors (T9s, 98s) deviennent profitables depuis HJ.'},
+      {icon:'🎯',text:'Si CO ou BTN squeeze souvent, resserrer légèrement ta range.'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'r','TT':'r','99':'r','88':'r','77':'r','66':'f','55':'f','44':'f','33':'f','22':'f','AKs':'3','AQs':'r','AJs':'r','ATs':'r','A9s':'r','A8s':'f','A7s':'f','A6s':'f','A5s':'r','A4s':'f','A3s':'f','A2s':'f','AKo':'r','AQo':'r','AJo':'r','ATo':'f','A9o':'f','KQs':'r','KJs':'r','KTs':'r','K9s':'f','KQo':'r','KJo':'f','QJs':'r','QTs':'r','Q9s':'f','QJo':'f','JTs':'r','J9s':'f','T9s':'r','T8s':'f','98s':'f','87s':'f'}
+  },
+  CO: {
+    name:'CO', subtitle:'CUTOFF · 3 JOUEURS DERRIÈRE',
+    desc:'2e meilleure position. ~22% des mains. Vol de blindes très efficace.',
+    rules:[
+      {icon:'✅',text:'<b>Open large :</b> toutes paires, AXs, KXs, QJs+, SC (T9s–76s), AXo, KQo–KJo'},
+      {icon:'🎯',text:'<b>Steal :</b> si fold jusqu\'à CO → ouvrir encore plus large.'},
+      {icon:'💡',text:'Si BTN 3-bet souvent, 4-bet tes mains premium, fold les marginales.'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'r','99':'r','88':'r','77':'r','66':'r','55':'r','44':'r','33':'r','22':'r','AKs':'3','AQs':'3','AJs':'r','ATs':'r','A9s':'r','A8s':'r','A7s':'r','A6s':'r','A5s':'r','A4s':'r','A3s':'r','A2s':'r','AKo':'r','AQo':'r','AJo':'r','ATo':'r','A9o':'r','A8o':'f','A7o':'f','KQs':'r','KJs':'r','KTs':'r','K9s':'r','K8s':'f','KQo':'r','KJo':'r','KTo':'f','QJs':'r','QTs':'r','Q9s':'r','Q8s':'f','QJo':'r','QTo':'f','JTs':'r','J9s':'r','J8s':'f','JTo':'f','T9s':'r','T8s':'r','T7s':'f','98s':'r','97s':'f','87s':'r','76s':'r','65s':'f','54s':'f'}
+  },
+  BTN: {
+    name:'BTN', subtitle:'BUTTON · MEILLEURE POSITION',
+    desc:'La meilleure position. Tu agis en dernier post-flop. ~40% des mains.',
+    rules:[
+      {icon:'✅',text:'<b>Open très large :</b> ~40% des mains. Toutes paires, la plupart des mains suited.'},
+      {icon:'🎯',text:'<b>Steal maximal :</b> si fold jusqu\'au BTN → ouvrir quasi tout ce qui a une chance.'},
+      {icon:'💡',text:'Tu agiras en dernier post-flop = liberté maximale. Exploite cette position sans pitié.'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'3','99':'r','88':'r','77':'r','66':'r','55':'r','44':'r','33':'r','22':'r','AKs':'3','AQs':'3','AJs':'3','ATs':'r','A9s':'r','A8s':'r','A7s':'r','A6s':'r','A5s':'r','A4s':'r','A3s':'r','A2s':'r','AKo':'r','AQo':'r','AJo':'r','ATo':'r','A9o':'r','A8o':'r','A7o':'r','A6o':'r','A5o':'r','A4o':'f','A3o':'f','A2o':'f','KQs':'r','KJs':'r','KTs':'r','K9s':'r','K8s':'r','K7s':'r','KQo':'r','KJo':'r','KTo':'r','K9o':'r','QJs':'r','QTs':'r','Q9s':'r','Q8s':'r','QJo':'r','QTo':'r','JTs':'r','J9s':'r','J8s':'r','JTo':'r','T9s':'r','T8s':'r','T7s':'r','T9o':'f','98s':'r','97s':'r','96s':'f','87s':'r','86s':'f','76s':'r','75s':'f','65s':'r','64s':'f','54s':'r'}
+  },
+  SB: {
+    name:'SB', subtitle:'SMALL BLIND · AGIS 1er POST-FLOP',
+    desc:'Trompeuse. Tu agis en dernier pré-flop mais en PREMIER post-flop. Jouer serré et agressif.',
+    rules:[
+      {icon:'⚠️',text:'<b>Attention :</b> tu seras hors position contre BB sur tous les tours post-flop.'},
+      {icon:'✅',text:'<b>3-bet ou fold</b> face aux raises. Évite les cold-calls hors position.'},
+      {icon:'💡',text:'Avec les bonnes mains : 3-bet agressivement. Avec les marginales : fold.'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'r','99':'r','88':'r','77':'r','66':'f','55':'f','44':'f','33':'f','22':'f','AKs':'3','AQs':'3','AJs':'r','ATs':'r','A9s':'r','A8s':'f','A7s':'f','A6s':'f','A5s':'r','A4s':'f','A3s':'f','A2s':'f','AKo':'r','AQo':'r','AJo':'r','ATo':'f','KQs':'r','KJs':'r','KTs':'f','KQo':'r','KJo':'f','QJs':'r','QTs':'f','JTs':'r','T9s':'f'}
+  },
+  BB: {
+    name:'BB', subtitle:'BIG BLIND · DÉFENSE LARGE',
+    desc:'Tu as déjà 1BB investie = meilleures cotes pour défendre. Mais tu agis en premier post-flop.',
+    rules:[
+      {icon:'✅',text:'<b>Défends large</b> face aux min-raises (2BB) — tu as déjà 1BB dans le pot.'},
+      {icon:'🎯',text:'<b>3-bet</b> avec les mains premium + quelques bluffs (A5s, 76s).'},
+      {icon:'💡',text:'Face à un gros raise (4BB+), resserrer significativement. Face à 2BB, défendre large.'},
+    ],
+    m:{'AA':'3','KK':'3','QQ':'3','JJ':'3','TT':'r','99':'r','88':'r','77':'r','66':'c','55':'c','44':'c','33':'c','22':'c','AKs':'3','AQs':'r','AJs':'r','ATs':'r','A9s':'c','A8s':'c','A7s':'c','A6s':'c','A5s':'c','A4s':'c','A3s':'c','A2s':'c','AKo':'r','AQo':'r','AJo':'r','ATo':'c','A9o':'c','A8o':'c','A7o':'f','KQs':'r','KJs':'r','KTs':'c','K9s':'c','K8s':'c','KQo':'r','KJo':'c','KTo':'c','QJs':'r','QTs':'c','Q9s':'c','QJo':'c','JTs':'c','J9s':'c','T9s':'c','T8s':'c','98s':'c','87s':'c','76s':'c','65s':'c','54s':'c'}
+  },
+};
+
+function selectRange(pos, btn) {
+  document.querySelectorAll('.range-pos-btn').forEach(b => b.classList.remove('range-pos-active'));
+  btn.classList.add('range-pos-active');
+  buildMainRangeGrid(pos);
+}
+
+function buildMainRangeGrid(pos) {
+  const data = RANGE_DATA[pos];
+  if (!data) return;
+  document.getElementById('rangePosName').textContent = data.name;
+  document.getElementById('rangePosSubtitle').textContent = data.subtitle;
+  document.getElementById('rangePosDesc').textContent = data.desc;
+  document.getElementById('rangeRulesTitle').textContent = 'Règles — ' + data.name;
+  document.getElementById('rangeRules').innerHTML = data.rules.map(r => `
+    <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #252440;align-items:flex-start;">
+      <span style="font-size:15px;flex-shrink:0;">${r.icon}</span>
+      <span style="font-size:13px;color:#8886aa;line-height:1.5;">${r.text}</span>
+    </div>
+  `).join('');
+  document.getElementById('mainHandDetail').style.display = 'none';
+
+  const grid = document.getElementById('mainRangeGrid');
+  grid.innerHTML = '';
+  const actionColors = {
+    'r':{ bg:'#2a1a0a', border:'#d4a843', color:'#d4a843' },
+    '3':{ bg:'#1f0a0a', border:'#e84545', color:'#e84545' },
+    'c':{ bg:'#0a1f2a', border:'#3ecfca', color:'#3ecfca' },
+    'f':{ bg:'#141223', border:'#252440', color:'#3a3860' },
+  };
+  const actionNames = { 'r':'Open Raise', '3':'3-Bet', 'c':'Call', 'f':'Fold' };
+
+  for (let i = 0; i < 13; i++) {
+    for (let j = 0; j < 13; j++) {
+      const r1 = RANKS[i], r2 = RANKS[j];
+      let hand;
+      if (i === j) hand = r1+r2;
+      else if (i < j) hand = r1+r2+'s';
+      else hand = r2+r1+'o';
+
+      const action = data.m[hand] || 'f';
+      const ac = actionColors[action];
+      const cell = document.createElement('div');
+      cell.style.cssText = `aspect-ratio:1;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:6px;font-weight:600;cursor:pointer;border:1px solid ${ac.border};background:${ac.bg};color:${ac.color};line-height:1;text-align:center;padding:1px;transition:transform 0.1s;`;
+      cell.textContent = i===j ? r1+r2 : (i<j ? r1+r2 : r2+r1);
+      cell.onclick = () => showMainHandDetail(hand, action, actionNames[action], ac.color);
+      cell.ontouchstart = () => { cell.style.transform = 'scale(0.85)'; };
+      cell.ontouchend = () => { cell.style.transform = 'scale(1)'; };
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function showMainHandDetail(hand, action, actionName, color) {
+  const el = document.getElementById('mainHandDetail');
+  el.style.display = 'block';
+  document.getElementById('mhdHand').style.color = color;
+  document.getElementById('mhdHand').textContent = hand;
+  document.getElementById('mhdAction').innerHTML = `Action : <strong style="color:${color}">${actionName}</strong>`;
+  el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ===== SESSION STATUS =====
+const SESSION_FILES = {1:'session01-cours.html',2:'session02-cours.html',3:'session03-cours.html',4:'session04-cours.html'};
+function updateSessionStatuses() {
+  const completed = JSON.parse(localStorage.getItem('completedSessions') || '[]');
+  [1,2,3,4,5].forEach(n => {
+    const badge = document.getElementById('sbadge-'+n);
+    const card = document.getElementById('scard-'+n);
+    const num = document.getElementById('snum-'+n);
+    if (!badge) return;
+    if (completed.includes(n)) {
+      badge.textContent = '✓ TERMINÉE';
+      badge.className = 'session-badge badge-done';
+      card.classList.remove('locked');
+      if (num) num.style.color = '#4ecf7a';
+    } else if (n === 1) {
+      badge.textContent = 'EN COURS';
+      badge.className = 'session-badge badge-current';
+    } else {
+      badge.textContent = 'DISPONIBLE';
+      badge.className = 'session-badge badge-new';
+    }
+  });
+  // update header
+  const done = completed.length;
+  document.getElementById('headerSession').textContent = 'Session '+Math.min(done+1,10)+'/10';
+}
+
+// ===== POKER TABLE =====
+let tableProfile = 'fish';
+let tableStack = 100;
+let tableSB = 1;
+let tableBB = 2;
+let playerStack = 100;
+let iaStackVal = 100;
+let pot = 0;
+let gameStage = 'preflop';
+let playerHand = [];
+let boardDeck = [];
+let boardRevealed = [];
+let currentBet = 0;
+let iaCurrentBet = 0;
+let handOver = false;
+
+const SUITS = ['♠','♥','♦','♣'];
+const SUIT_COLORS = {'♠':'#a0cfff','♥':'#ff7070','♦':'#ff9f70','♣':'#70e070'};
+const VALUES = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+
+const PROFILES = {
+  fish:    { name:'Fish',         emoji:'🐟', foldThreshold:0.05, raiseThreshold:0.85, bluffFreq:0.05, desc:'Appelle presque tout' },
+  nit:     { name:'Nit (Tight)',  emoji:'🧊', foldThreshold:0.60, raiseThreshold:0.90, bluffFreq:0.02, desc:'Fold très souvent' },
+  calling: { name:'Calling Station', emoji:'📞', foldThreshold:0.02, raiseThreshold:0.95, bluffFreq:0.01, desc:'Ne fold jamais' },
+  lag:     { name:'LAG',          emoji:'🔥', foldThreshold:0.25, raiseThreshold:0.50, bluffFreq:0.30, desc:'Relance souvent' },
+};
+
+function buildDeck() {
+  const deck = [];
+  for (const s of SUITS) for (const v of VALUES) deck.push(v+s);
+  return deck.sort(()=>Math.random()-0.5);
+}
+
+function cardHTML(card) {
+  const suit = card.slice(-1);
+  const color = SUIT_COLORS[suit] || '#fff';
+  return `<div style="background:#1d1c35;border:2px solid ${color}40;border-radius:10px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:${color};min-width:52px;text-align:center;">${card}</div>`;
+}
+
+function selectProfile(p, el) {
+  tableProfile = p;
+  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selectStack(n, el) {
+  tableStack = n;
+  document.querySelectorAll('.stack-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selectBlinds(sb, bb, el) {
+  tableSB = sb; tableBB = bb;
+  document.querySelectorAll('.blinds-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function startTable() {
+  playerStack = tableStack;
+  iaStackVal = tableStack;
+  document.getElementById('tableConfig').style.display = 'none';
+  document.getElementById('tableGame').style.display = 'block';
+  const p = PROFILES[tableProfile];
+  document.getElementById('iaEmoji').textContent = p.emoji;
+  document.getElementById('iaName').textContent = p.name;
+  newHand();
+}
+
+function resetTable() {
+  document.getElementById('tableConfig').style.display = 'block';
+  document.getElementById('tableGame').style.display = 'none';
+}
+
+function newHand() {
+  handOver = false;
+  document.getElementById('newHandBtn').style.display = 'none';
+  document.getElementById('scExplanation') && null;
+
+  // Reset
+  const deck = buildDeck();
+  playerHand = [deck.pop(), deck.pop()];
+  boardDeck = [deck.pop(), deck.pop(), deck.pop(), deck.pop(), deck.pop()];
+  boardRevealed = [];
+  gameStage = 'preflop';
+  pot = 0;
+  currentBet = tableBB;
+  iaCurrentBet = 0;
+
+  // Post blinds — player is BTN/SB, IA is BB
+  playerStack -= tableSB;
+  iaStackVal -= tableBB;
+  pot = tableSB + tableBB;
+  iaCurrentBet = tableBB;
+
+  updateTableUI();
+  document.getElementById('playerPos').textContent = 'BTN · SB';
+  document.getElementById('gameMessage').textContent = `Tu postes la SB (${tableSB} BB). L'IA poste la BB (${tableBB} BB). Tu agis en premier pré-flop.`;
+  renderActions('preflop-open');
+}
+
+function updateTableUI() {
+  document.getElementById('potDisplay').textContent = pot + ' BB';
+  document.getElementById('stackDisplay').textContent = playerStack + ' BB';
+  document.getElementById('iaStack').textContent = iaStackVal + ' BB';
+  document.getElementById('stageDisplay').textContent = gameStage.toUpperCase().replace('-',' ');
+
+  // Player hand
+  document.getElementById('playerHand').innerHTML = playerHand.map(c => cardHTML(c)).join('');
+
+  // Board
+  const slots = document.getElementById('boardCards');
+  let html = '';
+  for (let i = 0; i < 5; i++) {
+    if (i < boardRevealed.length) {
+      const suit = boardRevealed[i].slice(-1);
+      const color = SUIT_COLORS[suit] || '#fff';
+      html += `<div style="background:#1d1c35;border:2px solid ${color}40;border-radius:8px;width:44px;height:56px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:${color};">${boardRevealed[i]}</div>`;
+    } else {
+      html += `<div style="background:#16152a;border:1px solid #252440;border-radius:8px;width:44px;height:56px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#4a4868;">?</div>`;
+    }
+  }
+  document.getElementById('boardCards').innerHTML = html;
+}
+
+function renderActions(type) {
+  const btns = document.getElementById('actionBtns');
+  if (type === 'preflop-open') {
+    const callAmt = tableBB - tableSB;
+    btns.innerHTML = `
+      <button class="action-btn action-fold" onclick="playerAction('fold')">Fold</button>
+      <button class="action-btn action-call" onclick="playerAction('call-preflop')">Call ${callAmt} BB (compléter la BB)</button>
+      <button class="action-btn action-raise" onclick="playerAction('raise-preflop')">Raise à ${tableBB*2.5} BB</button>
+    `;
+  } else if (type === 'postflop') {
+    btns.innerHTML = `
+      <button class="action-btn action-fold" onclick="playerAction('check')">Check</button>
+      <button class="action-btn action-call" onclick="playerAction('bet-small')">Bet ${Math.round(pot*0.33)} BB (33% pot)</button>
+      <button class="action-btn action-raise" onclick="playerAction('bet-big')">Bet ${Math.round(pot*0.66)} BB (66% pot)</button>
+    `;
+  } else if (type === 'face-bet') {
+    btns.innerHTML = `
+      <button class="action-btn action-fold" onclick="playerAction('fold')">Fold</button>
+      <button class="action-btn action-call" onclick="playerAction('call-bet')">Call ${currentBet} BB</button>
+      <button class="action-btn action-raise" onclick="playerAction('reraise')">Raise à ${currentBet*2.5} BB</button>
+    `;
+  }
+}
+
+function playerAction(action) {
+  if (handOver) return;
+  const p = PROFILES[tableProfile];
+  let msg = '';
+
+  if (action === 'fold') {
+    pot += 0;
+    iaStackVal += pot;
+    msg = `Tu as foldé. L'IA remporte le pot de ${pot} BB. 😔`;
+    endHand(false, msg);
+    return;
+  }
+
+  if (action === 'call-preflop') {
+    const amt = tableBB - tableSB;
+    playerStack -= amt; pot += amt;
+    // Flop
+    boardRevealed = boardDeck.slice(0,3);
+    gameStage = 'flop';
+    updateTableUI();
+    iaPostflopAction(p);
+    return;
+  }
+
+  if (action === 'raise-preflop') {
+    const raiseAmt = Math.round(tableBB * 2.5);
+    const extra = raiseAmt - tableSB;
+    playerStack -= extra; pot += extra;
+    currentBet = raiseAmt - tableBB;
+    updateTableUI();
+    // IA responds to raise
+    const r = Math.random();
+    if (r < p.foldThreshold) {
+      iaStackVal += 0;
+      msg = `Tu raises à ${raiseAmt} BB. L'IA fold ! Tu remportes le pot de ${pot} BB. 🎉`;
+      playerStack += pot;
+      endHand(true, msg);
+    } else if (r > p.raiseThreshold) {
+      const reraise = raiseAmt * 3;
+      iaStackVal -= (reraise - tableBB);
+      pot += (reraise - tableBB);
+      currentBet = reraise - raiseAmt;
+      document.getElementById('iaAction').textContent = `3-bet ${reraise} BB`;
+      updateTableUI();
+      document.getElementById('gameMessage').textContent = `Tu raises à ${raiseAmt} BB. L'IA 3-bet à ${reraise} BB ! Que fais-tu ?`;
+      renderActions('face-bet');
+    } else {
+      iaStackVal -= currentBet;
+      pot += currentBet;
+      boardRevealed = boardDeck.slice(0,3);
+      gameStage = 'flop';
+      document.getElementById('iaAction').textContent = `Call ${raiseAmt} BB`;
+      updateTableUI();
+      document.getElementById('gameMessage').textContent = `L'IA call ton raise. Flop : ${boardRevealed.join(' ')}`;
+      renderActions('postflop');
+    }
+    return;
+  }
+
+  if (action === 'check') {
+    const r = Math.random();
+    if (r > p.foldThreshold + 0.3) {
+      currentBet = Math.round(pot * 0.5);
+      iaStackVal -= currentBet; pot += currentBet;
+      document.getElementById('iaAction').textContent = `Bet ${currentBet} BB`;
+      updateTableUI();
+      document.getElementById('gameMessage').textContent = `Tu check. L'IA bet ${currentBet} BB. Que fais-tu ?`;
+      renderActions('face-bet');
+    } else {
+      document.getElementById('iaAction').textContent = 'Check';
+      advanceStreet();
+    }
+    return;
+  }
+
+  if (action === 'bet-small' || action === 'bet-big') {
+    const betAmt = action === 'bet-small' ? Math.round(pot*0.33) : Math.round(pot*0.66);
+    playerStack -= betAmt; pot += betAmt; currentBet = betAmt;
+    updateTableUI();
+    const r = Math.random();
+    if (r < p.foldThreshold) {
+      msg = `Tu bets ${betAmt} BB. L'IA fold ! Tu remportes ${pot} BB. 🎉`;
+      playerStack += pot;
+      endHand(true, msg);
+    } else if (r > p.raiseThreshold) {
+      const raise = betAmt * 2.5;
+      iaStackVal -= raise; pot += raise; currentBet = raise - betAmt;
+      document.getElementById('iaAction').textContent = `Raise ${raise} BB`;
+      updateTableUI();
+      document.getElementById('gameMessage').textContent = `Tu bets ${betAmt} BB. L'IA raise à ${raise} BB ! Que fais-tu ?`;
+      renderActions('face-bet');
+    } else {
+      iaStackVal -= betAmt; pot += betAmt;
+      document.getElementById('iaAction').textContent = `Call ${betAmt} BB`;
+      advanceStreet();
+    }
+    return;
+  }
+
+  if (action === 'call-bet') {
+    playerStack -= currentBet; pot += currentBet;
+    updateTableUI();
+    advanceStreet();
+    return;
+  }
+
+  if (action === 'reraise') {
+    const reraiseAmt = Math.round(currentBet * 2.5);
+    playerStack -= reraiseAmt; pot += reraiseAmt;
+    updateTableUI();
+    const r = Math.random();
+    if (r < p.foldThreshold + 0.2) {
+      msg = `Tu reraises à ${reraiseAmt} BB. L'IA fold ! Tu remportes ${pot} BB. 🎉`;
+      playerStack += pot;
+      endHand(true, msg);
+    } else {
+      iaStackVal -= reraiseAmt; pot += reraiseAmt;
+      advanceStreet();
+    }
+    return;
+  }
+}
+
+function iaPostflopAction(p) {
+  boardRevealed = boardDeck.slice(0,3);
+  gameStage = 'flop';
+  const r = Math.random();
+  if (r > p.foldThreshold + 0.4) {
+    currentBet = Math.round(pot * 0.5);
+    iaStackVal -= currentBet; pot += currentBet;
+    document.getElementById('iaAction').textContent = `Bet ${currentBet} BB`;
+    updateTableUI();
+    document.getElementById('gameMessage').textContent = `L'IA bet ${currentBet} BB au flop. Que fais-tu ?`;
+    renderActions('face-bet');
+  } else {
+    document.getElementById('iaAction').textContent = 'Check';
+    updateTableUI();
+    document.getElementById('gameMessage').textContent = `L'IA check au flop. ${boardRevealed.join(' ')}. À toi.`;
+    renderActions('postflop');
+  }
+}
+
+function advanceStreet() {
+  if (gameStage === 'flop') {
+    boardRevealed = boardDeck.slice(0,4);
+    gameStage = 'turn';
+    document.getElementById('gameMessage').textContent = `Turn : ${boardRevealed[3]}. À toi.`;
+    renderActions('postflop');
+  } else if (gameStage === 'turn') {
+    boardRevealed = boardDeck.slice(0,5);
+    gameStage = 'river';
+    document.getElementById('gameMessage').textContent = `River : ${boardRevealed[4]}. Dernière chance.`;
+    renderActions('postflop');
+  } else if (gameStage === 'river') {
+    showdown();
+  }
+  updateTableUI();
+}
+
+function showdown() {
+  handOver = true;
+  // Simple showdown: random result weighted by profile
+  const p = PROFILES[tableProfile];
+  const winChance = tableProfile === 'calling' ? 0.45 : tableProfile === 'nit' ? 0.40 : tableProfile === 'lag' ? 0.48 : 0.55;
+  const playerWins = Math.random() < winChance;
+  let msg = '';
+  if (playerWins) {
+    playerStack += pot;
+    msg = `Showdown ! Tu remportes le pot de ${pot} BB ! 🎉 Stack : ${playerStack} BB`;
+  } else {
+    iaStackVal += pot;
+    msg = `Showdown ! L'IA remporte le pot de ${pot} BB. Stack : ${playerStack} BB`;
+  }
+  document.getElementById('iaAction').textContent = playerWins ? 'Perdu' : 'Gagné';
+  document.getElementById('gameMessage').textContent = msg;
+  document.getElementById('actionBtns').innerHTML = '';
+  document.getElementById('newHandBtn').style.display = 'block';
+  updateTableUI();
+}
+
+function endHand(playerWon, msg) {
+  handOver = true;
+  updateTableUI();
+  document.getElementById('gameMessage').textContent = msg;
+  document.getElementById('actionBtns').innerHTML = '';
+  document.getElementById('newHandBtn').style.display = 'block';
+  if (playerWon) {
+    document.getElementById('iaAction').textContent = 'Fold';
+  }
+}
+
+// ===== INIT =====
+try {
+  initFC();
+  renderFC();
+} catch(e) { console.log('FC init error:', e); }
+try {
+  initScenarios();
+} catch(e) { console.log('Scenarios init error:', e); }
+try {
+  updateSessionStatuses();
+  renderHomeStats();
+} catch(e) { console.log('Home init error:', e); }
+try {
+  buildMainRangeGrid('UTG');
+} catch(e) { console.log('Range init error:', e); }
+
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+
+</body>
+</html>
