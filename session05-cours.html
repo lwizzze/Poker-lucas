@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Session 05 — Pot odds et equity</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0910;--bg2:#111020;--surface:#16152a;--surface2:#1d1c35;--border:#252440;--gold:#d4a843;--red:#e84545;--teal:#3ecfca;--green:#4ecf7a;--text:#e8e6f5;--text-dim:#9896b8;--text-muted:#4a4868;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
+#app{height:100dvh;display:flex;flex-direction:column;}
+.header{padding:calc(var(--safe-top)+12px) 16px 12px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:20;}
+.back-btn{width:36px;height:36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text-dim);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;text-decoration:none;}
+.header-info{flex:1;min-width:0;}
+.header-title{font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.header-sub{font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;letter-spacing:1px;}
+.timer-pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);cursor:pointer;flex-shrink:0;}
+.timer-pill.running{border-color:rgba(212,168,67,0.4);background:rgba(212,168,67,0.08);}
+.chapter-nav{display:flex;overflow-x:auto;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;scrollbar-width:none;}
+.chapter-nav::-webkit-scrollbar{display:none;}
+.chapter-btn{flex-shrink:0;padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
+.chapter-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+.progress-bar{height:2px;background:var(--border);flex-shrink:0;}
+.progress-fill{height:100%;background:var(--gold);transition:width 0.5s ease;}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
+.chapter{display:none;padding:20px 16px 40px;}
+.chapter.active{display:block;}
+.section-tag{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.chapter-hero{background:linear-gradient(135deg,var(--surface) 0%,var(--bg2) 100%);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;position:relative;overflow:hidden;}
+.chapter-hero::after{content:attr(data-icon);position:absolute;right:14px;bottom:-8px;font-size:72px;opacity:0.06;line-height:1;}
+.chapter-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#fff;margin-bottom:6px;line-height:1.2;}
+.chapter-desc{font-size:14px;color:var(--text-dim);font-style:italic;line-height:1.6;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.chip{font-size:11px;font-family:'DM Mono',monospace;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);}
+.block{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.block-header{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;}
+.block-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.bi-red{background:rgba(232,69,69,0.12);}
+.bi-gold{background:rgba(212,168,67,0.12);}
+.bi-teal{background:rgba(62,207,202,0.12);}
+.bi-green{background:rgba(78,207,122,0.12);}
+.bi-muted{background:var(--surface2);}
+.block-title{font-size:15px;font-weight:500;color:var(--text);flex:1;}
+.block-arrow{color:var(--text-muted);font-size:14px;transition:transform 0.25s;flex-shrink:0;}
+.block.open .block-arrow{transform:rotate(90deg);}
+.block-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
+.block.open .block-body{display:block;}
+.block-body p{font-size:14px;color:var(--text-dim);line-height:1.75;margin-top:12px;}
+.block-body strong{color:var(--text);}
+.info-box{border-radius:10px;padding:14px;margin-top:14px;}
+.info-box.teal{background:rgba(62,207,202,0.06);border:1px solid rgba(62,207,202,0.2);}
+.info-box.gold{background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.2);}
+.info-box.red{background:rgba(232,69,69,0.06);border:1px solid rgba(232,69,69,0.2);}
+.info-box.green{background:rgba(78,207,122,0.06);border:1px solid rgba(78,207,122,0.2);}
+.info-label{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.info-box.teal .info-label{color:var(--teal);}
+.info-box.gold .info-label{color:var(--gold);}
+.info-box.red .info-label{color:var(--red);}
+.info-box.green .info-label{color:var(--green);}
+.info-box p{margin-top:0!important;font-style:italic;}
+.info-box.gold p{color:#d4b96a;}
+.info-box.teal p{color:#a0ede9;}
+.info-box.red p{color:#f0a0a0;}
+.info-box.green p{color:#a0e8bc;}
+ul.content-list{list-style:none;padding:0;margin-top:10px;}
+ul.content-list li{font-size:14px;color:var(--text-dim);padding:8px 0;border-bottom:1px solid var(--border);line-height:1.5;display:flex;gap:8px;}
+ul.content-list li:last-child{border-bottom:none;}
+ul.content-list li::before{content:'→';color:var(--gold);flex-shrink:0;}
+
+/* EQUITY VISUALIZER */
+.eq-bar-wrap{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-top:14px;}
+.eq-bar-title{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+.eq-hands{display:flex;gap:10px;margin-bottom:14px;}
+.eq-hand-sel{flex:1;background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.eq-hand-sel.active{border-color:var(–gold);background:rgba(212,168,67,0.08);}
+.eq-hand-name{font-family:‘DM Mono’,monospace;font-size:14px;font-weight:700;color:var(–gold);margin-bottom:3px;}
+.eq-hand-type{font-size:11px;color:var(–text-muted);}
+.eq-bar{height:32px;background:var(–border);border-radius:8px;overflow:hidden;display:flex;margin-bottom:10px;}
+.eq-bar-a{background:var(–gold);height:100%;display:flex;align-items:center;justify-content:center;font-family:‘DM Mono’,monospace;font-size:12px;font-weight:700;color:var(–bg);transition:width 0.5s ease;}
+.eq-bar-b{background:var(–surface2);height:100%;display:flex;align-items:center;justify-content:center;font-family:‘DM Mono’,monospace;font-size:12px;color:var(–text-muted);transition:width 0.5s ease;flex:1;}
+.eq-labels{display:flex;justify-content:space-between;font-size:11px;color:var(–text-muted);font-family:‘DM Mono’,monospace;}
+
+/* POT ODDS CALCULATOR */
+.po-calc{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-top:14px;}
+.po-title{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+.po-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.po-label{font-size:13px;color:var(–text-dim);font-family:‘DM Mono’,monospace;}
+.po-val{font-family:‘Playfair Display’,serif;font-size:20px;font-weight:700;color:var(–gold);}
+.po-result{background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px;margin-top:12px;}
+.po-verdict{font-size:15px;font-weight:600;margin-bottom:6px;}
+.po-explain{font-size:13px;color:var(–text-dim);line-height:1.6;}
+
+/* EV CALCULATOR */
+.ev-calc{background:var(–bg2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-top:14px;}
+.ev-display{text-align:center;padding:16px 0;}
+.ev-num{font-family:‘Playfair Display’,serif;font-size:48px;font-weight:900;line-height:1;}
+.ev-lbl{font-size:11px;font-family:‘DM Mono’,monospace;color:var(–text-muted);letter-spacing:2px;margin-top:6px;}
+
+/* SCENARIO QUIZ */
+.scenario-card{background:var(–surface);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:12px;}
+.sc-situation{font-size:14px;color:var(–text-dim);line-height:1.65;margin-bottom:14px;}
+.sc-cards{display:flex;gap:6px;margin-bottom:12px;}
+.sc-card{font-family:‘DM Mono’,monospace;font-size:15px;font-weight:700;padding:8px 10px;border-radius:8px;background:var(–surface2);}
+.sc-card.s{color:#a0cfff;} .sc-card.h{color:#ff7070;} .sc-card.d{color:#ff9f70;} .sc-card.c{color:#70e070;}
+.sc-choices{display:flex;flex-direction:column;gap:8px;}
+.sc-btn{background:rgba(255,255,255,0.03);border:1px solid var(–border);border-radius:10px;padding:12px 14px;text-align:left;font-size:14px;color:var(–text);cursor:pointer;transition:all 0.2s;}
+.sc-btn.correct{background:rgba(78,207,122,0.1);border-color:rgba(78,207,122,0.4);color:var(–green);}
+.sc-btn.wrong{background:rgba(232,69,69,0.1);border-color:rgba(232,69,69,0.4);color:var(–red);}
+.sc-expl{display:none;background:#0d1f0d;border:1px solid rgba(78,207,122,0.2);border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#a0e8bc;line-height:1.65;}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;margin:14px 0;border-radius:10px;border:1px solid var(–border);}
+table{width:100%;border-collapse:collapse;}
+th{background:var(–surface2);color:var(–text-muted);font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px 12px;text-align:left;font-family:‘DM Mono’,monospace;}
+td{padding:10px 12px;border-top:1px solid var(–border);font-size:13px;color:var(–text-dim);}
+.td-gold{color:var(–gold);font-family:‘DM Mono’,monospace;font-weight:600;}
+.td-teal{color:var(–teal);}
+.td-green{color:var(–green);}
+.td-red{color:var(–red);}
+
+/* REVISION */
+.revision-timer{background:linear-gradient(135deg,var(–surface),var(–bg2));border:1px solid var(–border);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;}
+.rt-display{font-family:‘Playfair Display’,serif;font-size:52px;font-weight:900;color:var(–gold);line-height:1;margin:8px 0;}
+.rt-label{font-family:‘DM Mono’,monospace;font-size:10px;letter-spacing:3px;color:var(–text-muted);text-transform:uppercase;}
+.rt-progress{height:3px;background:var(–border);border-radius:2px;margin:14px 0;}
+.rt-fill{height:100%;background:var(–gold);border-radius:2px;transition:width 1s linear;}
+.rt-btns{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+.rt-start{background:var(–gold);border:none;border-radius:10px;color:var(–bg);font-family:‘DM Mono’,monospace;font-size:13px;font-weight:500;padding:12px 28px;cursor:pointer;}
+.rt-reset{background:var(–surface);border:1px solid var(–border);border-radius:10px;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:13px;padding:12px 20px;cursor:pointer;}
+.score-block{background:var(–surface);border:1px solid var(–border);border-radius:14px;padding:20px;text-align:center;margin-bottom:20px;}
+.score-val{font-family:‘Playfair Display’,serif;font-size:44px;font-weight:900;color:var(–gold);}
+.score-lbl{font-family:‘DM Mono’,monospace;font-size:11px;color:var(–text-muted);letter-spacing:2px;margin-top:4px;text-transform:uppercase;}
+.score-bar{height:4px;background:var(–border);border-radius:2px;margin:14px 0;}
+.score-fill{height:100%;background:var(–gold);border-radius:2px;transition:width 0.5s;}
+.check-item{display:flex;align-items:flex-start;gap:12px;background:var(–surface);border:1px solid var(–border);border-radius:10px;padding:14px 16px;margin-bottom:8px;cursor:pointer;}
+.check-item.done{border-color:rgba(78,207,122,0.3);background:rgba(78,207,122,0.04);}
+.check-box2{width:22px;height:22px;border-radius:6px;border:2px solid var(–border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:1px;}
+.check-item.done .check-box2{background:rgba(78,207,122,0.2);border-color:var(–green);color:var(–green);}
+.check-text{font-size:14px;color:var(–text-dim);line-height:1.5;flex:1;}
+.check-item.done .check-text{color:var(–text-muted);text-decoration:line-through;}
+.quiz-item{background:var(–surface);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:10px;}
+.quiz-num{font-size:10px;font-family:‘DM Mono’,monospace;color:var(–text-muted);letter-spacing:2px;margin-bottom:8px;text-transform:uppercase;}
+.quiz-q{font-size:15px;color:var(–text);font-style:italic;margin-bottom:12px;line-height:1.5;}
+.quiz-reveal{width:100%;background:transparent;border:1px solid var(–border);border-radius:8px;color:var(–text-muted);font-family:‘DM Mono’,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:10px;cursor:pointer;}
+.quiz-ans{display:none;background:#0d1f0d;border:1px solid rgba(78,207,122,0.2);border-radius:8px;padding:12px;margin-top:10px;font-size:13px;color:#7dde7d;line-height:1.6;}
+.quiz-rate{display:none;gap:8px;margin-top:10px;}
+.quiz-rate.show{display:flex;}
+.quiz-correct{flex:1;background:rgba(62,207,202,0.1);border:1px solid rgba(62,207,202,0.3);color:var(–teal);border-radius:8px;padding:9px;font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;}
+.quiz-wrong{flex:1;background:rgba(232,69,69,0.1);border:1px solid rgba(232,69,69,0.3);color:var(–red);border-radius:8px;padding:9px;font-family:‘DM Mono’,monospace;font-size:11px;cursor:pointer;}
+.quiz-item.correct{border-color:rgba(62,207,202,0.3);}
+.quiz-item.wrong{border-color:rgba(232,69,69,0.3);}
+.bottom-nav{padding-bottom:calc(var(–safe-bottom)+4px);background:rgba(10,9,16,0.97);border-top:1px solid var(–border);display:flex;flex-shrink:0;backdrop-filter:blur(20px);}
+.next-chapter-btn{flex:1;padding:12px;background:var(–gold);border:none;color:var(–bg);font-family:‘DM Mono’,monospace;font-size:13px;font-weight:500;letter-spacing:1px;cursor:pointer;}
+.prev-chapter-btn{width:56px;padding:12px;background:var(–surface);border:none;border-right:1px solid var(–border);color:var(–text-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+input[type=range]{width:100%;accent-color:var(–gold);margin:8px 0;}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+<div class="header">
+  <a class="back-btn" href="index.html">‹</a>
+  <div class="header-info">
+    <div class="header-title">Session 05 — Pot odds et equity</div>
+    <div class="header-sub" id="chapterLabel">CHAPITRE 1/4 · EQUITY</div>
+  </div>
+  <div class="timer-pill" id="globalTimer" onclick="toggleGlobalTimer()">25:00</div>
+</div>
+
+<div class="chapter-nav">
+  <button class="chapter-btn active" onclick="goChapter(0,this)">① Equity</button>
+  <button class="chapter-btn" onclick="goChapter(1,this)">② Pot odds</button>
+  <button class="chapter-btn" onclick="goChapter(2,this)">③ Décisions EV</button>
+  <button class="chapter-btn" onclick="goChapter(3,this)">④ Révision</button>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:12%"></div></div>
+
+<div class="scroll-area">
+
+<!-- ═══════════════════════════════
+     CHAPITRE 1 — EQUITY (25 min)
+═══════════════════════════════ -->
+
+<div class="chapter active" id="ch-0">
+  <div class="chapter-hero" data-icon="📊">
+    <div class="section-tag">① L'equity · 25 min</div>
+    <div class="chapter-title">Ta part du pot</div>
+    <div class="chapter-desc">L'equity est la base de toutes les décisions au poker. Comprendre ce concept change radicalement ta façon de jouer.</div>
+    <div class="chips">
+      <span class="chip">⏱ 25 min</span>
+      <span class="chip">📊 Equity pur</span>
+      <span class="chip">🎯 Range vs Range</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">📊</div>
+      <div class="block-title">Qu'est-ce que l'equity ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>L'<strong>equity</strong> est la part du pot qui t'appartient statistiquement si la main se jouait jusqu'à la fin (showdown) un nombre infini de fois. Ce n'est pas ce que tu gagnes à chaque main — c'est ta valeur moyenne.</p>
+      <ul class="content-list">
+        <li><strong>Exemple simple :</strong> AA vs KK pré-flop = AA a ~82% d'equity. Sur un pot de 100BB, AA "vaut" 82BB en moyenne.</li>
+        <li><strong>Equity n'est pas victoire :</strong> avoir 82% d'equity ne veut pas dire gagner 82 fois sur 100 exactement — mais sur un grand échantillon, oui.</li>
+        <li><strong>Equity change à chaque carte :</strong> ton equity évolue après le flop, le turn et la river selon les cartes qui tombent.</li>
+        <li><strong>Réaliser son equity :</strong> agir de façon à gagner autant d'argent que ton equity le suggère — ni plus (bluff lucky), ni moins (trop passif).</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 Fondamental</div>
+        <p>Le poker est un jeu d'equity. Toujours se demander : "Quelle est mon equity ici, et est-ce que ma décision maximise cette equity ?"</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- EQUITY VISUALIZER -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🎮</div>
+      <div class="block-title">Visualiseur d'equity — Mains vs Mains</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Touche un match-up pour voir l'equity de chaque main.</p>
+      <div class="eq-bar-wrap">
+        <div class="eq-bar-title">Sélectionne un match-up</div>
+        <div class="eq-hands">
+          <div class="eq-hand-sel active" id="eq-0" onclick="selectEquity(0)">
+            <div class="eq-hand-name">AA vs KK</div>
+            <div class="eq-hand-type">Premium vs Premium</div>
+          </div>
+          <div class="eq-hand-sel" id="eq-1" onclick="selectEquity(1)">
+            <div class="eq-hand-name">AKs vs QQ</div>
+            <div class="eq-hand-type">Overcards vs Paire</div>
+          </div>
+        </div>
+        <div class="eq-hands">
+          <div class="eq-hand-sel" id="eq-2" onclick="selectEquity(2)">
+            <div class="eq-hand-name">76s vs AK</div>
+            <div class="eq-hand-type">SC vs Broadways</div>
+          </div>
+          <div class="eq-hand-sel" id="eq-3" onclick="selectEquity(3)">
+            <div class="eq-hand-name">AA vs 72o</div>
+            <div class="eq-hand-type">Premium vs Pire main</div>
+          </div>
+        </div>
+        <div class="eq-hands">
+          <div class="eq-hand-sel" id="eq-4" onclick="selectEquity(4)">
+            <div class="eq-hand-name">KK vs AKo</div>
+            <div class="eq-hand-type">Paire vs Domination</div>
+          </div>
+          <div class="eq-hand-sel" id="eq-5" onclick="selectEquity(5)">
+            <div class="eq-hand-name">55 vs AK</div>
+            <div class="eq-hand-type">Flip classique</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px;" id="eqMatchup">AA vs KK</div>
+          <div class="eq-bar">
+            <div class="eq-bar-a" id="eqBarA" style="width:82%">82%</div>
+            <div class="eq-bar-b" id="eqBarB">18%</div>
+          </div>
+          <div class="eq-labels">
+            <span id="eqLabelA" style="color:var(--gold);">AA — 82%</span>
+            <span id="eqLabelB">KK — 18%</span>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-top:12px;font-size:13px;color:var(--text-dim);line-height:1.65;" id="eqComment">
+            AA domine KK massivement. KK est battu car les 2 rois restants sont dans la main adverse. La seule façon pour KK de gagner : toucher un set (12% environ).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">📈</div>
+      <div class="block-title">Equity avec le board — Comment ça évolue</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>L'equity change drastiquement selon les cartes du board. Une main forte pré-flop peut devenir faible, et inversement.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Situation</th><th>Main A</th><th>Equity A</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>Pré-flop</td><td class="td-gold">AA</td><td class="td-green">82%</td><td>vs KK</td></tr>
+            <tr><td>Flop K♠K♦7♣</td><td class="td-gold">AA</td><td class="td-red">5%</td><td>KK a touché un carré !</td></tr>
+            <tr><td>Flop A♠K♦7♣</td><td class="td-gold">AA</td><td class="td-green">94%</td><td>Set d'As vs Set de Rois</td></tr>
+            <tr><td>Pré-flop</td><td class="td-gold">76s</td><td class="td-gold">46%</td><td>vs AK (flip)</td></tr>
+            <tr><td>Flop 8♠9♦T♣</td><td class="td-gold">76s</td><td class="td-green">78%</td><td>Quinte complétée !</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-box teal">
+        <div class="info-label">💡 Leçon clé</div>
+        <p>C'est pourquoi on ne peut jamais "garantir" une victoire pré-flop. L'equity évolue constamment. AA perd ~18% du temps contre KK — c'est normal et mathématiquement attendu.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">⚔️</div>
+      <div class="block-title">Range vs Range — Le concept avancé</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>En réalité, tu ne joues pas contre une main spécifique — tu joues contre une <strong>range</strong> (ensemble de mains possibles). L'equity range vs range est plus complexe mais plus réaliste.</p>
+      <ul class="content-list">
+        <li><strong>Exemple :</strong> Tu 3-bet avec AKs. L'adversaire call depuis CO. Sa range de call ≈ TT-QQ, AQs, KQs. Ton AKs a environ 52% d'equity contre cette range entière.</li>
+        <li><strong>Pourquoi c'est important :</strong> décider de call, fold ou raise se fait contre une range estimée, pas contre une main précise que tu ne connais pas.</li>
+        <li><strong>Construire une range adverse :</strong> analyse les actions de l'adversaire (position, taille de mise, historique) pour réduire sa range probable.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">Exercice mental</div>
+        <p>À chaque décision, pense : "Contre quelle range l'adversaire peut-il avoir ici ?" puis estime ton equity globale contre cette range. C'est la base du poker avancé.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     CHAPITRE 2 — POT ODDS (30 min)
+═══════════════════════════════════ -->
+
+<div class="chapter" id="ch-1">
+  <div class="chapter-hero" data-icon="🧮">
+    <div class="section-tag">② Pot odds · 30 min</div>
+    <div class="chapter-title">Le prix pour rester dans le coup</div>
+    <div class="chapter-desc">Les pot odds mesurent le rapport entre ce que tu dois payer et ce que tu peux gagner. C'est la boussole de toute décision de call.</div>
+    <div class="chips">
+      <span class="chip">⏱ 30 min</span>
+      <span class="chip">🧮 Calcul rapide</span>
+      <span class="chip">💡 Implied odds</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">🧮</div>
+      <div class="block-title">Calculer les pot odds en 3 secondes</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Les <strong>pot odds</strong> = le ratio entre la mise à appeler et le pot total après ton call. Ils indiquent quelle fréquence minimale tu dois gagner pour que le call soit profitable.</p>
+      <ul class="content-list">
+        <li><strong>Formule :</strong> % requis = Mise / (Pot + Mise) × 100</li>
+        <li><strong>Exemple 1 :</strong> Pot = 100, mise adverse = 50. Tu dois mettre 50 pour gagner 150. % requis = 50/150 = 33%</li>
+        <li><strong>Exemple 2 :</strong> Pot = 100, mise adverse = 100. % requis = 100/200 = 50%</li>
+        <li><strong>Exemple 3 :</strong> Pot = 80, mise adverse = 20. % requis = 20/100 = 20%</li>
+      </ul>
+      <div class="info-box teal">
+        <div class="info-label">💡 Règle pratique</div>
+        <p>Si ton equity (%) > % requis par les pot odds → call est profitable. Si ton equity < % requis → fold est correct (sauf implied odds).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- POT ODDS CALCULATOR -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🎮</div>
+      <div class="block-title">Calculateur de pot odds interactif</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Entre les valeurs pour calculer si ton call est profitable.</p>
+      <div class="po-calc">
+        <div class="po-title">Paramètres</div>
+        <div class="po-row">
+          <span class="po-label">Pot actuel (BB)</span>
+          <span class="po-val" id="poPot">100</span>
+        </div>
+        <input type="range" min="5" max="500" value="100" oninput="updatePO('pot',this.value)">
+        <div class="po-row">
+          <span class="po-label">Mise adverse (BB)</span>
+          <span class="po-val" id="poMise" style="color:var(--teal)">50</span>
+        </div>
+        <input type="range" min="1" max="300" value="50" oninput="updatePO('mise',this.value)">
+        <div class="po-row">
+          <span class="po-label">Ton equity estimée (%)</span>
+          <span class="po-val" id="poEquity" style="color:var(--red)">35</span>
+        </div>
+        <input type="range" min="0" max="100" value="35" oninput="updatePO('equity',this.value)">
+        <div class="po-result" id="poResult">
+          <div class="po-verdict"></div>
+          <div class="po-explain"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">💰</div>
+      <div class="block-title">Implied odds — L'argent futur</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Les <strong>implied odds</strong> (cotes implicites) prennent en compte l'argent supplémentaire que tu peux gagner sur les tours futurs si tu complètes ta main.</p>
+      <ul class="content-list">
+        <li><strong>Quand c'est crucial :</strong> quand les pot odds seuls ne justifient pas un call, mais que les implied odds le font (ex: set mining avec petites paires)</li>
+        <li><strong>Exemple :</strong> Pot = 20BB, mise = 10BB. Pot odds = 33% requis. Tu as 22 (12% de toucher un set). Les pot odds seuls = fold. Mais si tu peux gagner 200BB quand tu touches → call profitable.</li>
+        <li><strong>Facteurs favorables :</strong> stacks profonds, adversaire qui paye beaucoup avec ses bonnes mains, main bien déguisée (set, quinte non évidente)</li>
+        <li><strong>Facteurs défavorables :</strong> stacks courts, adversaire qui fold facilement, draw évident (adversaire n'ayant pas d'adversaire)</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 Règle des implied odds</div>
+        <p>Pour le set mining : tu as besoin d'un stack adverse d'au moins 15x la mise pour que le call soit profitable. Ex: mise 10BB → adversaire doit avoir au moins 150BB.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-muted">📋</div>
+      <div class="block-title">Tableau de référence rapide</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Ce tableau te permet de décider rapidement si un call est profitable selon ta situation.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mise / Pot</th><th>% requis</th><th>Flush draw ok ?</th><th>OESD ok ?</th><th>Gutshot ok ?</th></tr></thead>
+          <tbody>
+            <tr><td class="td-gold">25% (1/4 pot)</td><td class="td-teal">20%</td><td class="td-green">✓ (36%)</td><td class="td-green">✓ (32%)</td><td class="td-green">✓ (16%)</td></tr>
+            <tr><td class="td-gold">33% (1/3 pot)</td><td class="td-teal">25%</td><td class="td-green">✓ (36%)</td><td class="td-green">✓ (32%)</td><td class="td-red">✗ (16%)</td></tr>
+            <tr><td class="td-gold">50% (demi-pot)</td><td class="td-teal">33%</td><td class="td-green">✓ (36%)</td><td class="td-red">✗ (32%)</td><td class="td-red">✗ (16%)</td></tr>
+            <tr><td class="td-gold">75% (3/4 pot)</td><td class="td-teal">43%</td><td class="td-red">✗ (36%)</td><td class="td-red">✗ (32%)</td><td class="td-red">✗ (16%)</td></tr>
+            <tr><td class="td-gold">100% (pot bet)</td><td class="td-teal">50%</td><td class="td-red">✗ (36%)</td><td class="td-red">✗ (32%)</td><td class="td-red">✗ (16%)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);font-style:italic;margin-top:8px;">* Au flop (2 cartes à venir, règle ×4). Au turn, les % de compléter sont divisés par 2.</div>
+    </div>
+  </div>
+
+  <!-- SCENARIOS INTERACTIFS -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">🎯</div>
+      <div class="block-title">Scénarios — Call ou Fold ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Calcule mentalement avant de regarder la réponse.</p>
+
+```
+  <div class="scenario-card">
+    <div class="sc-situation">Pot = 60BB. Adversaire bet 30BB. Tu as un <strong>flush draw</strong> (9 outs). Au flop.</div>
+    <div class="sc-choices">
+      <button class="sc-btn" onclick="scAnswer(0,0,this)">Fold — pas assez d'equity</button>
+      <button class="sc-btn" onclick="scAnswer(0,1,this)">Call — les pot odds le justifient</button>
+      <button class="sc-btn" onclick="scAnswer(0,2,this)">Raise semi-bluff</button>
+    </div>
+    <div class="sc-expl" id="sc-expl-0">✅ Call ET Raise sont corrects ! Pot odds : 30/(60+30) = 33% requis. Flush draw = 36% d'equity (règle ×4). 36% > 33% → call est profitable. Raise semi-bluff est même mieux car tu ajoutes de la fold equity. Fold serait une erreur mathématique.</div>
+  </div>
+
+  <div class="scenario-card" style="margin-top:10px;">
+    <div class="sc-situation">Pot = 80BB. Adversaire bet 60BB. Tu as un <strong>gutshot</strong> (4 outs). Au turn (1 carte).</div>
+    <div class="sc-choices">
+      <button class="sc-btn" onclick="scAnswer(1,0,this)">Fold — pot odds insuffisants</button>
+      <button class="sc-btn" onclick="scAnswer(1,1,this)">Call — j'ai quand même une chance</button>
+      <button class="sc-btn" onclick="scAnswer(1,2,this)">Raise bluff — représenter une main forte</button>
+    </div>
+    <div class="sc-expl" id="sc-expl-1">✅ Fold est correct mathématiquement. Pot odds : 60/(80+60) = 43% requis. Gutshot au turn = 4×2 = 8% d'equity. 8% &lt; 43% → call n'est PAS profitable. Raise bluff est possible si tu penses qu'il peut folder, mais risqué. Fold est la décision mathématiquement correcte.</div>
+  </div>
+
+  <div class="scenario-card" style="margin-top:10px;">
+    <div class="sc-situation">Pot = 40BB. Adversaire bet 10BB. Tu as <strong>22</strong> (set mining, 2 outs au flop). Stacks 200BB.</div>
+    <div class="sc-choices">
+      <button class="sc-btn" onclick="scAnswer(2,0,this)">Fold — 8% c'est trop peu</button>
+      <button class="sc-btn" onclick="scAnswer(2,1,this)">Call — implied odds justifient</button>
+      <button class="sc-btn" onclick="scAnswer(2,2,this)">Raise — représenter une grosse main</button>
+    </div>
+    <div class="sc-expl" id="sc-expl-2">✅ Call grâce aux implied odds ! Pot odds seuls : 10/(40+10) = 20% requis. Set mining = 8% — insuffisant selon les pot odds directs. MAIS : stacks de 200BB = si tu touches un set, tu peux gagner 190BB supplémentaires. 10BB à risquer pour potentiellement gagner 200BB = excellent ratio. C'est exactement pourquoi les implied odds changent tout.</div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CHAPITRE 3 — DÉCISIONS EV (25 min)
+═══════════════════════════════════════ -->
+
+<div class="chapter" id="ch-2">
+  <div class="chapter-hero" data-icon="⚡">
+    <div class="section-tag">③ Prendre les bonnes décisions · 25 min</div>
+    <div class="chapter-title">Expected Value — La valeur espérée</div>
+    <div class="chapter-desc">L'EV (Expected Value) est le concept ultime du poker. Chaque action a une valeur espérée positive ou négative. Ton objectif : toujours jouer +EV.</div>
+    <div class="chips">
+      <span class="chip">⏱ 25 min</span>
+      <span class="chip">⚡ EV positive</span>
+      <span class="chip">🎯 Décisions optimales</span>
+    </div>
+  </div>
+
+  <div class="block open">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-gold">⚡</div>
+      <div class="block-title">Qu'est-ce que l'EV (Expected Value) ?</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>L'<strong>EV</strong> (valeur espérée) est la somme moyenne que tu gagnes ou perds sur une décision répétée de nombreuses fois. Une décision +EV est profitable à long terme, même si elle perd parfois.</p>
+      <ul class="content-list">
+        <li><strong>Formule :</strong> EV = (% de gagner × gain) − (% de perdre × perte)</li>
+        <li><strong>Exemple :</strong> Tu fais un all-in avec AA vs KK. Pot = 200BB. EV = (0.82 × 200) − (0.18 × 100) = 164 − 18 = <strong>+146BB</strong> d'EV !</li>
+        <li><strong>Une décision +EV peut perdre :</strong> AA perd contre KK 18% du temps. Mais répétée 1000 fois, tu gagnes 146BB par main en moyenne.</li>
+        <li><strong>Focus sur l'EV, pas le résultat :</strong> la variance (chance) à court terme ne reflète pas la qualité de ta décision. L'EV seule compte.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 Le mantra du pro</div>
+        <p>"Je ne joue pas pour gagner cette main. Je joue pour prendre des décisions +EV. Si je fais toujours des décisions +EV, les profits suivront inévitablement."</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- EV CALCULATOR -->
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-teal">🧮</div>
+      <div class="block-title">Calculateur d'EV interactif</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>Calcule l'EV d'une situation en ajustant les paramètres.</p>
+      <div class="ev-calc">
+        <div class="po-row" style="margin-bottom:6px;">
+          <span class="po-label">Pot à gagner (BB)</span>
+          <span class="po-val" id="evPot">100</span>
+        </div>
+        <input type="range" min="10" max="400" value="100" oninput="updateEV('pot',this.value)">
+        <div class="po-row" style="margin-bottom:6px;">
+          <span class="po-label">Mise à risquer (BB)</span>
+          <span class="po-val" id="evMise" style="color:var(--teal)">50</span>
+        </div>
+        <input type="range" min="1" max="300" value="50" oninput="updateEV('mise',this.value)">
+        <div class="po-row" style="margin-bottom:6px;">
+          <span class="po-label">Ton equity (%)</span>
+          <span class="po-val" id="evEq" style="color:var(--red)">60</span>
+        </div>
+        <input type="range" min="0" max="100" value="60" oninput="updateEV('eq',this.value)">
+        <div class="ev-display">
+          <div class="ev-num" id="evResult" style="color:var(--green)">+35 BB</div>
+          <div class="ev-lbl">VALEUR ESPÉRÉE PAR ACTION</div>
+        </div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.6;text-align:center;" id="evComment">Cette action est +EV. Sur 100 fois, tu gagnes en moyenne 35 BB par décision.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-red">❌</div>
+      <div class="block-title">Les erreurs classiques qui détruisent l'EV</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <ul class="content-list">
+        <li><strong>Fold trop souvent face aux bluffs :</strong> si tu fold 70% face à une river bet de 50% pot (qui nécessite seulement 33% de fold), l'adversaire gagne de l'argent à bluffer. Tu génères une EV négative.</li>
+        <li><strong>Call trop souvent sans odds :</strong> l'inverse — appeler sans equity suffisante = EV négative systématique.</li>
+        <li><strong>Jouer pour éviter de perdre :</strong> "Je vais checker pour ne pas risquer" — cette mentalité rate des opportunités +EV. La passivité coûte de l'argent aussi.</li>
+        <li><strong>Tilt = décisions -EV :</strong> émotions → mauvaises décisions → EV négative. La gestion mentale est directement liée à l'EV.</li>
+        <li><strong>Ne pas bet pour value :</strong> checker avec une main forte par peur de fold = perdre de l'EV sur les calls que l'adversaire aurait faits.</li>
+      </ul>
+      <div class="info-box red">
+        <div class="info-label">⚠️ Erreur n°1</div>
+        <p>Jouer en fonction des résultats récents plutôt que de l'EV. "J'ai perdu 3 mains avec AA, donc AA est malchanceux" — c'est une erreur de raisonnement. L'EV d'AA est toujours +EV.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-green">🎯</div>
+      <div class="block-title">Combiner equity + pot odds + EV en temps réel</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>En jeu réel, tu n'as que quelques secondes pour décider. Voici le processus mental à automatiser :</p>
+      <ul class="content-list">
+        <li><strong>Étape 1 :</strong> Estime la range adverse → quelle est ton equity approximative contre cette range ?</li>
+        <li><strong>Étape 2 :</strong> Calcule les pot odds → quel % dois-tu gagner pour que le call soit neutre ?</li>
+        <li><strong>Étape 3 :</strong> Compare → si equity > pot odds requis → call/raise. Sinon → fold ou bluff si fold equity suffisante.</li>
+        <li><strong>Étape 4 :</strong> Ajoute les implied odds → si tu peux gagner beaucoup plus quand tu complètes, ça peut changer la décision.</li>
+      </ul>
+      <div class="info-box teal">
+        <div class="info-label">⚡ En pratique</div>
+        <p>Au début, ce processus prend 10 secondes. Avec l'entraînement, ça prend 2 secondes. C'est un muscle mental qui se développe — les flashcards et scénarios de cette app sont faits pour ça.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-icon bi-muted">📊</div>
+      <div class="block-title">Variance — Pourquoi tu peux bien jouer et perdre</div>
+      <div class="block-arrow">›</div>
+    </div>
+    <div class="block-body">
+      <p>La <strong>variance</strong> est l'écart entre les résultats réels et l'EV théorique sur le court terme. Même avec des décisions parfaites, tu peux perdre sur des centaines de mains.</p>
+      <ul class="content-list">
+        <li><strong>Court terme :</strong> la variance domine. Tu peux perdre même en jouant parfaitement. C'est normal.</li>
+        <li><strong>Long terme :</strong> l'EV reprend ses droits. Sur 100,000 mains, les bons joueurs gagnent.</li>
+        <li><strong>Bankroll management :</strong> gérer sa bankroll correctement permet de survivre à la variance sans faire faillite.</li>
+        <li><strong>Ne jamais evaluer une session par son résultat :</strong> évalue-la par la qualité de tes décisions.</li>
+      </ul>
+      <div class="info-box gold">
+        <div class="info-label">🏆 Mindset pro</div>
+        <p>"Résultat ≠ Qualité de décision. Une bonne décision peut perdre. Une mauvaise peut gagner. Seule l'EV à long terme compte."</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     CHAPITRE 4 — RÉVISION (15 min)
+═══════════════════════════════════ -->
+
+<div class="chapter" id="ch-3">
+  <div class="chapter-hero" data-icon="🎯">
+    <div class="section-tag">④ Révision active · 15 min</div>
+    <div class="chapter-title">Test final & mémorisation</div>
+    <div class="chapter-desc">Timer, checklist et 5 questions sur l'equity, les pot odds et l'EV.</div>
+    <div class="chips">
+      <span class="chip">⏱ 15 min</span>
+      <span class="chip">✅ Checklist</span>
+      <span class="chip">🎯 5 questions</span>
+    </div>
+  </div>
+
+  <div class="revision-timer">
+    <div class="rt-label">TIMER DE RÉVISION</div>
+    <div class="rt-display" id="rtDisplay">15:00</div>
+    <div class="rt-progress"><div class="rt-fill" id="rtFill" style="width:0%"></div></div>
+    <div class="rt-btns">
+      <button class="rt-start" id="rtBtn" onclick="toggleRevisionTimer()">▶ Démarrer</button>
+      <button class="rt-reset" onclick="resetRevisionTimer()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="score-block">
+    <div class="score-val" id="quizScore">0/5</div>
+    <div class="score-lbl">Score Quiz</div>
+    <div class="score-bar"><div class="score-fill" id="scoreFill" style="width:0%"></div></div>
+  </div>
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Checklist</div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je comprends ce qu'est l'equity et comment elle évolue avec le board</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je sais calculer les pot odds en temps réel (mise / pot+mise)</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je comprends la différence entre pot odds directs et implied odds</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je sais appliquer la règle des 2 et 4 pour estimer mon equity rapidement</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je comprends l'EV et pourquoi jouer +EV est l'objectif principal</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je comprends la variance et pourquoi résultat ≠ qualité de décision</div></div>
+  <div class="check-item" onclick="toggleCheck(this)"><div class="check-box2"></div><div class="check-text">Je sais combiner equity + pot odds pour décider call/fold en quelques secondes</div></div>
+
+  <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin:20px 0 10px;">Quiz final</div>
+
+  <div class="quiz-item" id="qi-0">
+    <div class="quiz-num">Question 01</div>
+    <div class="quiz-q">Pot = 120BB. Adversaire bet 40BB. Tu as un flush draw (9 outs) au flop. Call ou fold ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(0,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-0">Pot odds : 40/(120+40) = <strong>25% requis</strong>. Flush draw au flop = 9×4 = <strong>36%</strong>. 36% > 25% → <strong>Call est très profitable</strong>. Tu as une EV positive claire. Raise semi-bluff est encore mieux car tu ajoutes de la fold equity en plus de l'equity directe.</div>
+    <div class="quiz-rate" id="qr-0"><button class="quiz-correct" onclick="rateQuiz(0,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(0,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-1">
+    <div class="quiz-num">Question 02</div>
+    <div class="quiz-q">Explique la différence entre equity et pot odds en une phrase chacun.</div>
+    <button class="quiz-reveal" onclick="revealQuiz(1,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-1"><strong>Equity</strong> = ta part statistique du pot si la main allait jusqu'au showdown (ex: 36% avec un flush draw). <strong>Pot odds</strong> = le % minimum que tu dois gagner pour que ton call soit neutre, calculé par la taille de la mise par rapport au pot total (ex: 25% si tu dois payer 40 dans un pot de 120). La comparaison des deux détermine si appeler est profitable.</div>
+    <div class="quiz-rate" id="qr-1"><button class="quiz-correct" onclick="rateQuiz(1,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(1,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-2">
+    <div class="quiz-num">Question 03</div>
+    <div class="quiz-q">Tu fais un all-in avec KK vs AA (tu as 18% d'equity). Le pot est 200BB. Quelle est l'EV de cette décision ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(2,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-2">EV = (0.18 × 200) − (0.82 × 100) = 36 − 82 = <strong>−46 BB</strong>. Cette décision est -EV. Cela dit, si tu ne savais pas que l'adversaire avait AA (tu jouais vs sa range), la décision pouvait être +EV. L'EV se calcule contre une range, pas contre une main précise que tu ne connais pas.</div>
+    <div class="quiz-rate" id="qr-2"><button class="quiz-correct" onclick="rateQuiz(2,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(2,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-3">
+    <div class="quiz-num">Question 04</div>
+    <div class="quiz-q">Pot = 30BB. Adversaire bet 10BB. Tu as 22. Stacks = 250BB. Utilises-tu les pot odds directs ou les implied odds pour décider ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(3,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-3">Les <strong>implied odds</strong> dominent cette décision. Pot odds directs : 10/(30+10) = 25% requis. 22 = 8% d'equity directe → fold selon les pot odds seuls. MAIS : avec 250BB de stacks, si tu touches un set (12%), tu peux gagner énorme. La mise de 10BB est très petite vs le potentiel de gain de 240BB+ → <strong>call est profitable grâce aux implied odds</strong>.</div>
+    <div class="quiz-rate" id="qr-3"><button class="quiz-correct" onclick="rateQuiz(3,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(3,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="quiz-item" id="qi-4">
+    <div class="quiz-num">Question 05</div>
+    <div class="quiz-q">Tu joues parfaitement pendant 500 mains et tu perds de l'argent. Est-ce que ça veut dire que tu as mal joué ?</div>
+    <button class="quiz-reveal" onclick="revealQuiz(4,this)">Voir la réponse</button>
+    <div class="quiz-ans" id="qa-4">Non — c'est de la <strong>variance</strong>. Sur 500 mains, la variance peut dominer l'EV. Même en prenant uniquement des décisions +EV, tu peux être en négatif sur cet échantillon. Ce n'est qu'à long terme (10,000+ mains) que l'EV se reflète dans les résultats. L'évaluation correcte : as-tu pris des décisions +EV ? Si oui → tu as bien joué, peu importe le résultat.</div>
+    <div class="quiz-rate" id="qr-4"><button class="quiz-correct" onclick="rateQuiz(4,'correct')">✓ Compris</button><button class="quiz-wrong" onclick="rateQuiz(4,'wrong')">✗ À revoir</button></div>
+  </div>
+
+  <div class="info-box gold" style="margin-top:20px;">
+    <div class="info-label">🏆 Règle d'or — Session 05</div>
+    <p>"Equity = ta part du pot. Pot odds = le prix à payer. EV = est-ce profitable ? Si equity > pot odds requis → joue. Si non → fold (sauf implied odds). Toujours jouer +EV, jamais pour le résultat immédiat."</p>
+  </div>
+</div>
+
+</div><!-- end scroll-area -->
+
+<div class="bottom-nav">
+  <button class="prev-chapter-btn" id="prevBtn" onclick="prevChapter()" style="display:none">‹</button>
+  <button class="next-chapter-btn" id="nextBtn" onclick="nextChapter()">② Pot odds →</button>
+</div>
+</div>
+
+<script>
+// CHAPTER NAV
+let currentChapter=0;
+const chapterLabels=['CHAPITRE 1/4 · EQUITY','CHAPITRE 2/4 · POT ODDS','CHAPITRE 3/4 · DÉCISIONS EV','CHAPITRE 4/4 · RÉVISION'];
+const nextLabels=['② Pot odds →','③ Décisions EV →','④ Révision →','✓ Session terminée !'];
+const progressPcts=[12,37,62,100];
+const chapterTimes=[25*60,30*60,25*60,15*60];
+
+function goChapter(n,btn){
+  document.querySelectorAll('.chapter').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.chapter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ch-'+n).classList.add('active');
+  if(btn)btn.classList.add('active');
+  else document.querySelectorAll('.chapter-btn')[n].classList.add('active');
+  document.querySelector('.scroll-area').scrollTop=0;
+  currentChapter=n;
+  document.getElementById('chapterLabel').textContent=chapterLabels[n];
+  document.getElementById('progressFill').style.width=progressPcts[n]+'%';
+  document.getElementById('prevBtn').style.display=n===0?'none':'flex';
+  document.getElementById('prevBtn').style.alignItems='center';
+  document.getElementById('prevBtn').style.justifyContent='center';
+  document.getElementById('nextBtn').textContent=nextLabels[n];
+  if(!globalRunning){globalSecs=chapterTimes[n];document.getElementById('globalTimer').textContent=Math.floor(globalSecs/60).toString().padStart(2,'0')+':00';}
+}
+function nextChapter(){
+  if(currentChapter<3)goChapter(currentChapter+1,null);
+  else{
+    const done=JSON.parse(localStorage.getItem('completedSessions')||'[]');
+    if(!done.includes(5)){done.push(5);localStorage.setItem('completedSessions',JSON.stringify(done));}
+    window.location.href='index.html';
+  }
+}
+function prevChapter(){if(currentChapter>0)goChapter(currentChapter-1,null);}
+function toggleBlock(h){h.closest('.block').classList.toggle('open');}
+
+// GLOBAL TIMER
+let globalSecs=25*60,globalRunning=false,globalInterval=null;
+function toggleGlobalTimer(){
+  if(globalRunning){clearInterval(globalInterval);globalRunning=false;document.getElementById('globalTimer').classList.remove('running');}
+  else{globalRunning=true;document.getElementById('globalTimer').classList.add('running');globalInterval=setInterval(()=>{if(globalSecs<=0){clearInterval(globalInterval);globalRunning=false;return;}globalSecs--;const m=Math.floor(globalSecs/60).toString().padStart(2,'0');const s=(globalSecs%60).toString().padStart(2,'0');document.getElementById('globalTimer').textContent=m+':'+s;},1000);}
+}
+
+// EQUITY VISUALIZER
+const equityData=[
+  {matchup:'AA vs KK',handA:'AA',handB:'KK',eqA:82,comment:'AA domine KK massivement. KK ne peut gagner qu\'en touchant un set (12%) ou via runner-runner. Un des match-ups les plus asymétriques du poker.'},
+  {matchup:'AKs vs QQ',handA:'AKs',handB:'QQ',eqA:46,comment:'Le "flip" classique ! AKs (deux overcards + draw potentiel) vs QQ (paire). Légèrement en défaveur d\'AKs. Ni l\'un ni l\'autre n\'est un gros favori.'},
+  {matchup:'76s vs AKo',handA:'76s',handB:'AKo',eqA:40,comment:'Suited connectors vs Broadways — match-up fréquent. 76s est sous-favori mais pas écrasé. Sa force : faire des mains déguisées (quinte, couleur) que AKo ne voit pas venir.'},
+  {matchup:'AA vs 72o',handA:'AA',handB:'72o',eqA:88,comment:'AA contre la pire main possible. Pourtant, 72o gagne encore 12% du temps ! C\'est la force de la variance au poker — rien n\'est garanti même avec la meilleure main.'},
+  {matchup:'KK vs AKo',handA:'KK',handB:'AKo',eqA:69,comment:'KK est favori mais AKo a 3 As pour gagner + runner-runner possibilities. C\'est pourquoi KK ne fait pas all-in "naïvement" contre un joueur qui peut avoir AA.'},
+  {matchup:'55 vs AKo',handA:'55',handB:'AKo',eqA:53,comment:'Le flip parfait ! Paire vs deux overcards = environ 50/50. 55 gagne si aucun A ou K ne tombe, ou s\'il touche un set. AKo gagne en touchant une paire ou mieux.'},
+];
+
+function selectEquity(n){
+  document.querySelectorAll('.eq-hand-sel').forEach((e,i)=>e.classList.toggle('active',i===n));
+  const d=equityData[n];
+  document.getElementById('eqMatchup').textContent=d.matchup;
+  document.getElementById('eqBarA').style.width=d.eqA+'%';
+  document.getElementById('eqBarA').textContent=d.eqA+'%';
+  document.getElementById('eqBarB').textContent=(100-d.eqA)+'%';
+  document.getElementById('eqLabelA').textContent=d.handA+' — '+d.eqA+'%';
+  document.getElementById('eqLabelB').textContent=d.handB+' — '+(100-d.eqA)+'%';
+  document.getElementById('eqComment').textContent=d.comment;
+}
+
+// POT ODDS CALCULATOR
+let poPot=100,poMise=50,poEquity=35;
+function updatePO(type,val){
+  if(type==='pot')poPot=parseInt(val);
+  if(type==='mise')poMise=parseInt(val);
+  if(type==='equity')poEquity=parseInt(val);
+  document.getElementById('poPot').textContent=poPot;
+  document.getElementById('poMise').textContent=poMise;
+  document.getElementById('poEquity').textContent=poEquity+'%';
+  const req=Math.round(poMise/(poPot+poMise)*100);
+  const profitable=poEquity>=req;
+  const ev=Math.round((poEquity/100*(poPot+poMise))-(1-poEquity/100)*poMise-poMise);
+  document.getElementById('poResult').innerHTML=`
+    <div class="po-verdict" style="color:${profitable?'var(--green)':'var(--red)'}">${profitable?'✅ CALL PROFITABLE':'❌ FOLD CORRECT'}</div>
+    <div class="po-explain">Requis : <strong>${req}%</strong> · Ton equity : <strong>${poEquity}%</strong> · EV : <strong style="color:${ev>=0?'var(--green)':'var(--red)'}">${ev>=0?'+':''}${ev} BB</strong></div>
+  `;
+}
+updatePO('',0);
+
+// EV CALCULATOR
+let evPot=100,evMise=50,evEq=60;
+function updateEV(type,val){
+  if(type==='pot')evPot=parseInt(val);
+  if(type==='mise')evMise=parseInt(val);
+  if(type==='eq')evEq=parseInt(val);
+  document.getElementById('evPot').textContent=evPot;
+  document.getElementById('evMise').textContent=evMise;
+  document.getElementById('evEq').textContent=evEq+'%';
+  const ev=Math.round((evEq/100)*evPot-(1-evEq/100)*evMise);
+  const pos=ev>=0;
+  document.getElementById('evResult').textContent=(pos?'+':'')+ev+' BB';
+  document.getElementById('evResult').style.color=pos?'var(--green)':'var(--red)';
+  document.getElementById('evComment').textContent=pos
+    ?`Cette action est +EV. Sur 100 fois, tu gagnes en moyenne ${ev} BB par décision.`
+    :`Cette action est -EV. Sur 100 fois, tu perds en moyenne ${Math.abs(ev)} BB par décision.`;
+}
+updateEV('',0);
+
+// SCENARIOS
+const scCorrect=[1,0,1];
+function scAnswer(sc,choice,btn){
+  const btns=btn.closest('.sc-choices').querySelectorAll('.sc-btn');
+  btns.forEach(b=>b.style.pointerEvents='none');
+  const correct=scCorrect[sc];
+  const isOk=choice===correct||(sc===0&&choice===2);
+  btn.classList.add(isOk?'correct':'wrong');
+  if(!isOk)btns[correct].classList.add('correct');
+  document.getElementById('sc-expl-'+sc).style.display='block';
+}
+
+// REVISION TIMER
+let rtSecs=15*60,rtRunning=false,rtInterval=null;
+function toggleRevisionTimer(){
+  if(rtRunning){clearInterval(rtInterval);rtRunning=false;document.getElementById('rtBtn').textContent='▶ Reprendre';}
+  else{rtRunning=true;document.getElementById('rtBtn').textContent='⏸ Pause';rtInterval=setInterval(()=>{if(rtSecs<=0){clearInterval(rtInterval);rtRunning=false;document.getElementById('rtDisplay').textContent='✓ FINI';document.getElementById('rtBtn').textContent='✓ Complété';return;}rtSecs--;document.getElementById('rtDisplay').textContent=Math.floor(rtSecs/60).toString().padStart(2,'0')+':'+((rtSecs%60).toString().padStart(2,'0'));document.getElementById('rtFill').style.width=((15*60-rtSecs)/(15*60)*100)+'%';},1000);}
+}
+function resetRevisionTimer(){clearInterval(rtInterval);rtRunning=false;rtSecs=15*60;document.getElementById('rtDisplay').textContent='15:00';document.getElementById('rtFill').style.width='0%';document.getElementById('rtBtn').textContent='▶ Démarrer';}
+function toggleCheck(el){el.classList.toggle('done');el.querySelector('.check-box2').textContent=el.classList.contains('done')?'✓':'';}
+let quizAnswers={};
+function revealQuiz(i,btn){document.getElementById('qa-'+i).style.display='block';btn.style.display='none';document.getElementById('qr-'+i).classList.add('show');}
+function rateQuiz(i,result){quizAnswers[i]=result;document.getElementById('qi-'+i).classList.remove('correct','wrong');document.getElementById('qi-'+i).classList.add(result);const c=Object.values(quizAnswers).filter(v=>v==='correct').length;document.getElementById('quizScore').textContent=c+'/'+Math.max(Object.keys(quizAnswers).length,5);document.getElementById('scoreFill').style.width=(c/5*100)+'%';}
+</script>
+
+</body>
+</html>
